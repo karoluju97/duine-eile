@@ -350,8 +350,8 @@
       const chosen = (d.levels || {})[a];
       const opts = levelsFor(a).map(function (l) {
         const on = chosen === l.id;
-        return '<button type="button" class="choice choice-wide' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="j-level" data-act="' + a + '" data-value="' + l.id + '">' +
-          '<b>' + esc(l.name) + '</b><span>' + esc(l.desc) + '</span></button>';
+        return '<button type="button" class="choice' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="j-level" data-act="' + a + '" data-value="' + l.id + '">' +
+          esc(l.name) + '</button>';
       }).join('');
       const last = i === list.length - 1;
       html = stepHead(5, i === 0 ? '#/join/activities' : '#/join/level/' + (i - 1)) +
@@ -570,7 +570,7 @@
           '<div><dt>Where</dt><dd>' + esc(v.name) + '</dd></div>' +
           '<div><dt>When</dt><dd>' + esc(fmtDate(new Date(g.start))) + ', ' + esc(fmtTime(new Date(g.start))) + ' to ' + esc(fmtTime(endOf(g))) + '</dd></div>' +
           '<div><dt>Cost</dt><dd>' + esc(g.cost) + '</dd></div>' +
-          '<div><dt>Level</dt><dd>' + esc(lv ? lv.name : g.level) + (lv ? '<span class="dd-sub">' + esc(lv.desc) + '</span>' : '') + '</dd></div>' +
+          '<div><dt>Level</dt><dd>' + esc(lv ? lv.name : g.level) + '</dd></div>' +
         '</dl>' +
         (g.note ? '<blockquote class="note"><span class="note-from">' + esc(g.organiser) + ' says</span>' + esc(g.note) + '</blockquote>' : '') +
         '<section class="people"><h2 class="h-small">Who\'s going · ' + going(g) + ' of ' + g.size + '</h2><div class="avatars">' + avatars + '</div>' +
@@ -681,7 +681,7 @@
   function levelOptions(activity) {
     return levelsFor(activity).map(function (l, i) {
       const def = act(activity).kind === 'player' ? 'casual' : 'moderate';
-      return '<option value="' + l.id + '"' + (l.id === def ? ' selected' : '') + '>' + l.name + ' · ' + esc(l.desc) + '</option>';
+      return '<option value="' + l.id + '"' + (l.id === def ? ' selected' : '') + '>' + l.name + '</option>';
     }).join('');
   }
 
