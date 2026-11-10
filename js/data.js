@@ -29,10 +29,19 @@
     cycling:    { name: 'Cycling',         kind: 'route',  minutes: 150, cost: 'Free',     size: 6 },
     yoga:       { name: 'Yoga',            kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
     boardgames: { name: 'Board games',     kind: 'player', minutes: 180, cost: 'Free',     size: 6 },
-    gaming:     { name: 'Online gaming',   kind: 'player', minutes: 120, cost: 'Free',     size: 5 }
+    gaming:     { name: 'Online gaming',   kind: 'player', minutes: 120, cost: 'Free',     size: 5 },
+    volleyball: { name: 'Volleyball',      kind: 'player', minutes: 90,  cost: '€4 each',  size: 12 },
+    pickleball: { name: 'Pickleball',      kind: 'player', minutes: 60,  cost: '€5 each',  size: 4 },
+    badminton:  { name: 'Badminton',       kind: 'player', minutes: 60,  cost: '€5 each',  size: 4 },
+    dancing:    { name: 'Dancing',         kind: 'player', minutes: 90,  cost: '€10 each', size: 10 },
+    chess:      { name: 'Chess',           kind: 'player', minutes: 120, cost: 'Free',     size: 2 },
+    quiz:       { name: 'Table quiz',      kind: 'player', minutes: 150, cost: '€5 each',  size: 4 },
+    darts:      { name: 'Darts',           kind: 'player', minutes: 120, cost: 'Free',     size: 4 },
+    pool:       { name: 'Pool',            kind: 'player', minutes: 120, cost: '€2 a game', size: 4 }
   };
-  const ORDER = ['football', 'gaelic', 'basketball', 'tennis', 'padel', 'golf', 'gym', 'climbing', 'surfing',
-    'swimming', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'boardgames', 'gaming'];
+  const ORDER = ['football', 'gaelic', 'basketball', 'volleyball', 'tennis', 'padel', 'pickleball', 'badminton',
+    'golf', 'gym', 'climbing', 'surfing', 'swimming', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'dancing',
+    'boardgames', 'chess', 'quiz', 'darts', 'pool', 'gaming'];
 
   const LEVELS = {
     player: [
@@ -96,7 +105,15 @@
     surfing: ['08:00', '10:00', '14:00'],
     walking: ['10:00', '13:00', '19:00'],
     yoga: ['09:00', '19:00'],
-    gaming: ['20:00', '21:00', '21:30']
+    gaming: ['20:00', '21:00', '21:30'],
+    volleyball: ['19:00', '20:00'],
+    pickleball: ['10:00', '18:30', '19:30'],
+    badminton: ['18:00', '19:00', '20:00'],
+    dancing: ['19:00', '20:00'],
+    chess: ['14:00', '19:00'],
+    quiz: ['20:30', '21:00'],
+    darts: ['20:00', '21:00'],
+    pool: ['19:30', '20:30']
   };
 
   const NOTES = {
@@ -116,7 +133,15 @@
     surfing: ['Check the forecast, we cancel in big swell.', 'Longboards, mellow waves.', 'Wetsuit essential.'],
     walking: ['Easy pace, coffee after.', 'Lunchtime loop, about 5 km.', 'Dogs welcome on leads.'],
     yoga: ['Bring a mat.', 'Gentle flow, all welcome.', 'Outdoor if dry, indoors if not.'],
-    gaming: ['Discord link in the chat.', 'Squads, chill vibes, no rage.', 'Trying a new co-op game tonight.']
+    gaming: ['Discord link in the chat.', 'Squads, chill vibes, no rage.', 'Trying a new co-op game tonight.'],
+    volleyball: ['6 v 6, rotate every set.', 'Indoor, friendly.', 'Bring indoor shoes.'],
+    pickleball: ['Paddles to borrow.', 'Doubles, we mix partners.', 'New to it? Grand, it takes ten minutes to learn.'],
+    badminton: ['Court booked, shuttles sorted.', 'Doubles, bring a racket.', 'Friendly rallies, then games.'],
+    dancing: ['Salsa class, no partner needed.', 'Swing night, beginners welcome.', 'Céilí, the caller shows you the steps.'],
+    chess: ['Bring a board if you have one.', 'Casual games, a few blitz rounds.', 'Happy to go over openings.'],
+    quiz: ['Need one more for our team.', 'General knowledge, music round at the end.', 'Proceeds go to the local club.'],
+    darts: ['501, doubles out.', 'Casual arrows, nobody is Luke Littler.', 'Board booked in the back.'],
+    pool: ['Winner stays on.', 'Doubles if there are four of us.', 'Bring coins.']
   };
 
   const HANDLES = [
@@ -161,6 +186,14 @@
       add('football', 'Astro pitch, ' + p.town);
       add('gaelic', 'GAA pitch, ' + p.town);
       add('basketball', 'Sports hall, ' + p.town);
+      add('volleyball', 'Sports hall, ' + p.town);
+      add('pickleball', 'Sports hall, ' + p.town);
+      add('badminton', 'Sports hall, ' + p.town);
+      add('dancing', 'Dance studio, ' + p.town);
+      add('chess', 'Library, ' + p.town);
+      add('quiz', 'Pub, ' + p.town);
+      add('darts', 'Pub, ' + p.town);
+      add('pool', 'Pool hall, ' + p.town);
       add('tennis', 'Tennis courts, ' + p.town);
       if (p.padel) add('padel', 'Padel courts, ' + p.town);
       add('golf', 'Pitch and putt, ' + p.town);

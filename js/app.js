@@ -30,7 +30,15 @@
     surfing: "Class. I'll post a surf check that morning.",
     walking: "Lovely, we'll head off on time.",
     yoga: 'Lovely, see you there.',
-    gaming: "Nice one, I'll drop the invite in here before we start."
+    gaming: "Nice one, I'll drop the invite in here before we start.",
+    volleyball: "Great, that's both teams full.",
+    pickleball: 'Brilliant, doubles is on.',
+    badminton: 'Great, court is booked.',
+    dancing: 'Lovely, see you on the floor.',
+    chess: 'Great, see you there.',
+    quiz: "Class, that's the team sorted.",
+    darts: 'Sound, see you at the oche.',
+    pool: 'Sound, see you there.'
   };
   const REPLIES = [
     'Grand, see you there.',
@@ -400,7 +408,15 @@
       surfing: 'M3 18c3 0 3-2 6-2s3 2 6 2s3-2 6-2M15 3c3 1 5 4 4 7l-8 2c-1-4 1-8 4-9z',
       walking: 'M13 3a2 2 0 1 0 0.01 0M10 21l2-6 2 3v3M12 15l-1-5-3 2v3M11 10l4 1 2 3',
       yoga: 'M12 3a2 2 0 1 0 0.01 0M12 7v6M5 10l7 3 7-3M7 20l5-3 5 3',
-      gaming: 'M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.2 2L14.5 14h-5l-1.3 1A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4zM8 11v3M6.5 12.5h3M15.5 12h.01M17.5 13.5h.01'
+      gaming: 'M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.2 2L14.5 14h-5l-1.3 1A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4zM8 11v3M6.5 12.5h3M15.5 12h.01M17.5 13.5h.01',
+      volleyball: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 3c-1 4 0 7 3 9M3.5 15c4-1 7 0 9-3M20.5 15c-3-2-5-4-5-8',
+      pickleball: 'M9 3h6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-1v6h-4v-6H9a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM20 18.5a1.5 1.5 0 1 0 0.01 0',
+      badminton: 'M12 21a3 3 0 0 0 3-3H9a3 3 0 0 0 3 3zM9 18L6 4M15 18l3-14M12 18V3M7.5 11h9',
+      dancing: 'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0a3 3 0 1 1 6 0zM20 16a3 3 0 1 1-6 0a3 3 0 1 1 6 0z',
+      chess: 'M12 3a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM9.5 10h5l-1 6h-3zM7 21h10l-1-3H8z',
+      quiz: 'M4 5h16v11H9l-5 4zM10 9a2 2 0 1 1 3 1.7c-.7.4-1 .8-1 1.3M12 14h.01',
+      darts: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10zM12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2z',
+      pool: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7.5a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM12 11.5a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z'
     };
     return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + paths[a] + '"/></svg>';
   }
