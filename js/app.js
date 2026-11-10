@@ -55,8 +55,8 @@
   function blank() {
     return {
       user: null, account: null, signedOut: false, draft: null,
-      joined: [], joinedAs: {}, waitlist: [], posted: [], chats: {}, reported: {},
-      filters: { activity: 'foryou', level: 'all', day: 'any', party: 'solo' }
+      joined: [], waitlist: [], posted: [], chats: {}, reported: {},
+      filters: { activity: 'foryou', level: 'all', day: 'any' }
     };
   }
   function load() {
@@ -118,9 +118,7 @@
   function isJoined(g) { return state.joined.indexOf(g.id) >= 0; }
   function isWaiting(g) { return state.waitlist.indexOf(g.id) >= 0; }
   function isMine(g) { return !!g.mine; }
-  function bringing(g) { return isJoined(g) ? (state.joinedAs || {})[g.id] || 'solo' : null; }
-  function partner() { const p = state.user && state.user.partner; return p && p.status === 'linked' ? p.username : null; }
-  function going(g) { return 1 + (g.friends || 0) + g.players.length + (isJoined(g) ? (bringing(g) === 'solo' ? 1 : 2) : 0); }
+  function going(g) { return 1 + (g.friends || 0) + g.players.length + (isJoined(g) ? 1 : 0); }
   function spotsLeft(g) { return Math.max(0, g.size - going(g)); }
   function endOf(g) { return new Date(new Date(g.start).getTime() + act(g.activity).minutes * 60000); }
   function isOver(g) { return now() > endOf(g); }
@@ -488,7 +486,6 @@
     games = games.filter(function (g) {
       const d = startOfDay(new Date(g.start));
       const diff = Math.round((d - today) / 864e5);
-      if (f.party === 'pair' && spotsLeft(g) < 2 && !isJoined(g) && !isMine(g)) return false;
       if (f.day === 'today') return diff === 0;
       if (f.day === 'tomorrow') return diff === 1;
       if (f.day === 'weekend') { const wd = d.getDay(); return (wd === 0 || wd === 6) && diff < 7; }
@@ -506,8 +503,6 @@
     };
     const actChips = (mineActs.length ? chip('activity', 'foryou', 'For you') : '') + chip('activity', 'all', 'All') +
       acts.map(function (a) { return chip('activity', a, act(a).name); }).join('');
-    if (!f.party) f.party = 'solo';
-    const partyChips = chip('party', 'solo', 'Just me') + chip('party', 'pair', partner() ? 'Me + ' + partner() : 'Two of us');
     const dayChips = chip('day', 'any', 'Any day') + chip('day', 'today', 'Today') + chip('day', 'tomorrow', 'Tomorrow') + chip('day', 'weekend', 'This weekend');
     const levelOpts = '<option value="all">Any level</option>' +
       '<optgroup label="Players">' + D.LEVELS.player.map(function (l) { return '<option value="' + l.id + '"' + (f.level === l.id ? ' selected' : '') + '>' + l.name + '</option>'; }).join('') + '</optgroup>' +
@@ -529,7 +524,6 @@
       '<div class="feed-layout">' +
         '<aside class="filters" aria-label="Filters">' +
           '<div class="filter-group"><h2 class="filter-title">Activity</h2><div class="chip-row">' + actChips + '</div></div>' +
-          '<div class="filter-group"><h2 class="filter-title">Coming as</h2><div class="chip-row">' + partyChips + '</div></div>' +
           '<div class="filter-group"><h2 class="filter-title">When</h2><div class="chip-row">' + dayChips + '</div></div>' +
           '<div class="filter-group"><label class="filter-title" for="f-level">Level</label><select id="f-level" data-change="filter-level">' + levelOpts + '</select></div>' +
         '</aside>' +
@@ -545,7 +539,6 @@
     if (isMine(g)) btn = '<span class="pill pill-dark">Organising</span>';
     else if (isJoined(g)) btn = '<span class="pill pill-ok">' + icon('check') + 'You\'re in</span>';
     else if (spotsLeft(g) === 0) btn = '<button type="button" class="btn btn-sm btn-outline" data-action="waitlist" data-id="' + g.id + '">' + (isWaiting(g) ? 'On waitlist' : 'Join waitlist') + '</button>';
-    else if (state.filters.party === 'pair' && spotsLeft(g) >= 2) btn = '<button type="button" class="btn btn-sm btn-primary" data-action="join" data-as="' + (partner() ? 'partner' : 'guest') + '" data-id="' + g.id + '">We\'re in</button>';
     else btn = '<button type="button" class="btn btn-sm btn-primary" data-action="join" data-id="' + g.id + '">I\'m in</button>';
     return '' +
       '<article class="card game-card">' +
@@ -570,8 +563,6 @@
       (people.length > 7 ? '<span class="avatar avatar-more">+' + (people.length - 7) + '</span>' : '') +
       ((g.friends || 0) ? '<span class="avatar avatar-more" title="Organiser\'s friends">+' + g.friends + '</span>' : '') +
       (isJoined(g) ? '<span class="avatar avatar-you" title="You">' + esc(initials(state.user.username)) + '</span>' : '') +
-      (bringing(g) === 'partner' ? '<span class="avatar avatar-you" title="' + esc(state.user.partner.username) + '">' + esc(initials(state.user.partner.username)) + '</span>' : '') +
-      (bringing(g) === 'guest' ? '<span class="avatar avatar-you" title="Your +1">+1</span>' : '') +
       Array.from({ length: Math.min(spotsLeft(g), 4) }).map(function () { return '<span class="avatar avatar-open" aria-hidden="true">?</span>'; }).join('');
 
     const details = '' +
@@ -599,12 +590,8 @@
     } else if (spotsLeft(g) === 0) {
       side = '<div class="card cta"><h2>This game is full</h2><button type="button" class="btn btn-block ' + (isWaiting(g) ? 'btn-outline' : 'btn-dark') + '" data-action="waitlist" data-id="' + g.id + '">' + (isWaiting(g) ? 'Leave waitlist' : 'Join the waitlist') + '</button></div>';
     } else {
-      const two = spotsLeft(g) >= 2
-        ? '<button type="button" class="btn btn-outline btn-block btn-lg" data-action="join" data-as="' + (partner() ? 'partner' : 'guest') + '" data-id="' + g.id + '">' +
-          (partner() ? 'We\'re in · me + ' + esc(partner()) : 'I\'m in + 1') + '</button>'
-        : '';
       side = '<div class="card cta"><h2>' + (spotsLeft(g) === 1 ? 'Take the last spot' : spotsLeft(g) + ' spots left') + '</h2>' +
-        '<button type="button" class="btn btn-primary btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button>' + two + '</div>';
+        '<button type="button" class="btn btn-primary btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button></div>';
     }
 
     return '<a class="back" href="#/">' + icon('back') + 'Back to games</a>' +
@@ -615,7 +602,7 @@
     const status = isMine(g)
       ? '<div class="joined-banner"><span class="joined-icon">' + icon('check') + '</span><div><b>You\'re organising</b><span>' + spotsLeft(g) + ' spot' + (spotsLeft(g) === 1 ? '' : 's') + ' still open</span></div>' +
         '<button type="button" class="btn btn-sm btn-outline-light" data-action="copy-link" data-id="' + g.id + '">' + (ui.copied ? 'Link copied' : 'Copy link') + '</button></div>'
-      : '<div class="joined-banner"><span class="joined-icon">' + icon('check') + '</span><div><b>' + (bringing(g) === 'partner' ? 'You + ' + esc(state.user.partner.username) + ' are in' : bringing(g) === 'guest' ? 'You + 1 are in' : 'You\'re in') + '</b><span>' + esc(when(g)) + '</span></div>' +
+      : '<div class="joined-banner"><span class="joined-icon">' + icon('check') + '</span><div><b>You\'re in</b><span>' + esc(when(g)) + '</span></div>' +
         (isOver(g) ? '' : '<button type="button" class="btn btn-sm btn-outline-light" data-action="leave" data-id="' + g.id + '">Leave</button>') + '</div>';
 
     if (chatDeleted(g)) {
@@ -773,7 +760,6 @@
             '<li>Game chats delete at midnight the day after the game.</li>' +
             '<li>Reported messages are kept for review, then deleted.</li>' +
             '<li>18+ only.</li></ul></div>' +
-          partnerCard() +
           '<div class="card"><h2 class="h-small">Account</h2><p class="muted small">' +
             (acc ? (acc.provider === 'email' ? 'Signed in with ' + esc(acc.email) : 'Signed in with ' + esc(acc.provider)) : 'Demo account') + '</p>' +
             '<button type="button" class="btn btn-sm btn-outline" data-action="signout">Sign out</button></div>' +
@@ -781,21 +767,6 @@
             '<button type="button" class="btn btn-sm ' + (ui.resetArmed ? 'btn-danger' : 'btn-outline') + '" data-action="reset">' + (ui.resetArmed ? 'Tap again to wipe everything' : 'Reset the demo') + '</button></div>' +
         '</div>' +
       '</div>';
-  }
-
-  function partnerCard() {
-    const p = state.user.partner;
-    if (!p) {
-      return '<form class="card partner" data-form="partner" novalidate><h2 class="h-small">Partner</h2>' +
-        (ui.partnerError ? '<p class="error" role="alert">' + esc(ui.partnerError) + '</p>' : '') +
-        '<div class="partner-row"><label class="sr-only" for="pt-name">Partner\'s username</label>' +
-        '<input id="pt-name" name="username" maxlength="20" autocomplete="off" placeholder="Their username">' +
-        '<button class="btn btn-sm btn-dark" type="submit">Add</button></div></form>';
-    }
-    return '<div class="card partner"><h2 class="h-small">Partner</h2>' +
-      '<div class="partner-row"><span class="avatar avatar-you">' + esc(initials(p.username)) + '</span>' +
-      '<span class="partner-name"><b>' + esc(p.username) + '</b>' + (p.status === 'linked' ? '' : '<span class="muted small">Request sent</span>') + '</span>' +
-      '<button type="button" class="btn btn-sm btn-outline" data-action="remove-partner">' + (p.status === 'linked' ? 'Remove' : 'Cancel') + '</button></div></div>';
   }
 
   /* ---------- actions ---------- */
@@ -815,11 +786,8 @@
     'clear-filters': function () { state.filters = { activity: 'all', level: 'all', day: 'any' }; save(); render(); },
     join: function (el) {
       const g = getGame(el.dataset.id);
-      const as = el.dataset.as || 'solo';
-      if (!g || isOver(g) || isJoined(g) || spotsLeft(g) < (as === 'solo' ? 1 : 2)) return;
-      if (as === 'partner' && !partner()) return;
+      if (!g || isOver(g) || spotsLeft(g) === 0 || isJoined(g)) return;
       state.joined.push(g.id);
-      (state.joinedAs || (state.joinedAs = {}))[g.id] = as;
       state.waitlist = state.waitlist.filter(function (x) { return x !== g.id; });
       seedChat(g);
       save();
@@ -828,7 +796,6 @@
     leave: function (el) {
       const id = el.dataset.id;
       state.joined = state.joined.filter(function (x) { return x !== id; });
-      if (state.joinedAs) delete state.joinedAs[id];
       delete state.chats[id];
       save();
       render();
@@ -862,7 +829,6 @@
       save();
       go('#/');
     },
-    'remove-partner': function () { delete state.user.partner; save(); render(); },
     signout: function () { state.signedOut = true; ui.signinMode = 'login'; save(); go('#/'); },
     'signin-mode': function (el) { ui.signinMode = el.dataset.value; ui.error = null; render(); },
     forgot: function () { ui.error = 'Demo: password reset emails come with real accounts.'; render(); },
@@ -934,21 +900,6 @@
         if (known) { ui.error = 'There\'s already an account with that email. Log in instead.'; return render(); }
         startDraft('email', email);
       }
-    },
-    partner: function (f) {
-      const name = f.elements.username.value.trim();
-      ui.partnerError = null;
-      if (!USERNAME.test(name)) { ui.partnerError = 'That\'s not a valid username.'; return render(); }
-      if (name.toLowerCase() === state.user.username.toLowerCase()) { ui.partnerError = 'That\'s you.'; return render(); }
-      state.user.partner = { username: name, status: 'pending' };
-      save();
-      render();
-      // Demo: the request is accepted a moment later.
-      setTimeout(function () {
-        if (state.user && state.user.partner && state.user.partner.username === name) {
-          state.user.partner.status = 'linked'; save(); render();
-        }
-      }, 1500);
     },
     'j-username': function (f) {
       const name = f.elements.username.value.trim();
