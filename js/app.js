@@ -38,7 +38,8 @@
     chess: 'Great, see you there.',
     quiz: "Class, that's the team sorted.",
     darts: 'Sound, see you at the oche.',
-    pool: 'Sound, see you there.'
+    pool: 'Sound, see you there.',
+    poolswim: "Great, I'll grab us a lane."
   };
   const REPLIES = [
     'Grand, see you there.',
@@ -416,7 +417,8 @@
       chess: 'M12 3a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM9.5 10h5l-1 6h-3zM7 21h10l-1-3H8z',
       quiz: 'M4 5h16v11H9l-5 4zM10 9a2 2 0 1 1 3 1.7c-.7.4-1 .8-1 1.3M12 14h.01',
       darts: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10zM12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2z',
-      pool: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7.5a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM12 11.5a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z'
+      pool: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 7.5a2 2 0 1 0 0 4a2 2 0 1 0 0-4zM12 11.5a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z',
+      poolswim: 'M7 4v11M13 4v11M7 7h6M7 11h6M3 19c2 0 2-1.5 4.5-1.5S10 19 12 19s2-1.5 4.5-1.5S19 19 21 19'
     };
     return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + paths[a] + '"/></svg>';
   }

@@ -23,6 +23,7 @@
     climbing:   { name: 'Climbing',        kind: 'player', minutes: 120, cost: '€15 each', size: 4 },
     surfing:    { name: 'Surfing',         kind: 'player', minutes: 120, cost: 'Free',     size: 4 },
     swimming:   { name: 'Open-water swim', kind: 'route',  minutes: 45,  cost: 'Free',     size: 6 },
+    poolswim:   { name: 'Pool swimming',   kind: 'route',  minutes: 45,  cost: '€6 each',  size: 4 },
     running:    { name: 'Running',         kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
     walking:    { name: 'Walking',         kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
     hiking:     { name: 'Hiking',          kind: 'route',  minutes: 180, cost: 'Free',     size: 8 },
@@ -40,7 +41,7 @@
     pool:       { name: 'Pool',            kind: 'player', minutes: 120, cost: '€2 a game', size: 4 }
   };
   const ORDER = ['football', 'gaelic', 'basketball', 'volleyball', 'tennis', 'padel', 'pickleball', 'badminton',
-    'golf', 'gym', 'climbing', 'surfing', 'swimming', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'dancing',
+    'golf', 'gym', 'climbing', 'surfing', 'swimming', 'poolswim', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'dancing',
     'boardgames', 'chess', 'quiz', 'darts', 'pool', 'gaming'];
 
   const LEVELS = {
@@ -71,7 +72,7 @@
     Kildare:   { town: 'Naas', padel: true, hiking: ['Donadea Forest Park'], running: ['The Curragh plains'], cycling: ['Royal Canal Greenway, Maynooth'] },
     Kilkenny:  { town: 'Kilkenny', hiking: ['Brandon Hill, Graiguenamanagh'], running: ['Kilkenny Castle Park'] },
     Laois:     { town: 'Portlaoise', hiking: ['Glenbarrow, Slieve Bloom'], running: ['Emo Court'] },
-    Leitrim:   { town: 'Carrick-on-Shannon', hiking: ['Glencar Waterfall walk'], running: ['Shannon Blueway, Carrick'], cycling: ['Shannon Blueway'] },
+    Leitrim:   { town: 'Carrick-on-Shannon', swimPool: 'Acres Lake heated pool, Drumshanbo', hiking: ['Glencar Waterfall walk'], running: ['Shannon Blueway, Carrick'], cycling: ['Shannon Blueway'] },
     Limerick:  { town: 'Limerick', padel: true, hiking: ['Ballyhoura Mountains'], running: ['University of Limerick riverside'], cycling: ['Limerick Greenway'], climbing: true },
     Longford:  { town: 'Longford', hiking: ['Corlea Trackway'], running: ['Royal Canal, Longford'], cycling: ['Royal Canal Greenway, Cloondara'] },
     Louth:     { town: 'Dundalk', hiking: ['Slieve Foye, Carlingford'], swimming: ['Clogherhead', 'Blackrock, Dundalk Bay'], running: ['Blackrock Promenade'], cycling: ['Carlingford Greenway'] },
@@ -113,7 +114,8 @@
     chess: ['14:00', '19:00'],
     quiz: ['20:30', '21:00'],
     darts: ['20:00', '21:00'],
-    pool: ['19:30', '20:30']
+    pool: ['19:30', '20:30'],
+    poolswim: ['07:00', '12:30', '19:00']
   };
 
   const NOTES = {
@@ -141,7 +143,8 @@
     chess: ['Bring a board if you have one.', 'Casual games, a few blitz rounds.', 'Happy to go over openings.'],
     quiz: ['Need one more for our team.', 'General knowledge, music round at the end.', 'Proceeds go to the local club.'],
     darts: ['501, doubles out.', 'Casual arrows, nobody is Luke Littler.', 'Board booked in the back.'],
-    pool: ['Winner stays on.', 'Doubles if there are four of us.', 'Bring coins.']
+    pool: ['Winner stays on.', 'Doubles if there are four of us.', 'Bring coins.'],
+    poolswim: ['Lane swim, steady pace.', 'Bring a cap and goggles.', 'Building up to 1 km, nobody racing.']
   };
 
   const HANDLES = [
@@ -194,6 +197,7 @@
       add('quiz', 'Pub, ' + p.town);
       add('darts', 'Pub, ' + p.town);
       add('pool', 'Pool hall, ' + p.town);
+      add('poolswim', p.swimPool || 'Leisure centre pool, ' + p.town);
       add('tennis', 'Tennis courts, ' + p.town);
       if (p.padel) add('padel', 'Padel courts, ' + p.town);
       add('golf', 'Pitch and putt, ' + p.town);
