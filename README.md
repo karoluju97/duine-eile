@@ -19,7 +19,7 @@ This repository is a **clickable web demo**. It runs entirely in the browser on 
 
 ## Skill levels
 
-| Players (5-a-side, padel, board games) | Routes (hiking, swimming, running, cycling) |
+| Players (5-a-side, Gaelic football, basketball, tennis, padel, pitch & putt, gym, climbing, surfing, board games, online gaming) | Routes and classes (open-water swim, running, walking, hiking, cycling, yoga) |
 | --- | --- |
 | Beginner, Casual, Intermediate, Advanced, Competitive | Easy, Moderate, Hard |
 

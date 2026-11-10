@@ -13,15 +13,26 @@
   ];
 
   const ACTIVITIES = {
-    football:   { name: '5-a-side',        kind: 'player', minutes: 60,  cost: '€5 each', size: 10 },
-    padel:      { name: 'Padel',           kind: 'player', minutes: 90,  cost: '€8 each', size: 4 },
-    hiking:     { name: 'Hiking',          kind: 'route',  minutes: 180, cost: 'Free',    size: 8 },
-    swimming:   { name: 'Open-water swim', kind: 'route',  minutes: 45,  cost: 'Free',    size: 6 },
-    running:    { name: 'Running',         kind: 'route',  minutes: 60,  cost: 'Free',    size: 8 },
-    cycling:    { name: 'Cycling',         kind: 'route',  minutes: 150, cost: 'Free',    size: 6 },
-    boardgames: { name: 'Board games',     kind: 'player', minutes: 180, cost: 'Free',    size: 6 }
+    football:   { name: '5-a-side',        kind: 'player', minutes: 60,  cost: '€5 each',  size: 10 },
+    gaelic:     { name: 'Gaelic football', kind: 'player', minutes: 60,  cost: 'Free',     size: 14 },
+    basketball: { name: 'Basketball',      kind: 'player', minutes: 60,  cost: '€4 each',  size: 6 },
+    tennis:     { name: 'Tennis',          kind: 'player', minutes: 60,  cost: '€5 each',  size: 4 },
+    padel:      { name: 'Padel',           kind: 'player', minutes: 90,  cost: '€8 each',  size: 4 },
+    golf:       { name: 'Pitch & putt',    kind: 'player', minutes: 120, cost: '€10 each', size: 4 },
+    gym:        { name: 'Gym',             kind: 'player', minutes: 60,  cost: 'Own membership', size: 3 },
+    climbing:   { name: 'Climbing',        kind: 'player', minutes: 120, cost: '€15 each', size: 4 },
+    surfing:    { name: 'Surfing',         kind: 'player', minutes: 120, cost: 'Free',     size: 4 },
+    swimming:   { name: 'Open-water swim', kind: 'route',  minutes: 45,  cost: 'Free',     size: 6 },
+    running:    { name: 'Running',         kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
+    walking:    { name: 'Walking',         kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
+    hiking:     { name: 'Hiking',          kind: 'route',  minutes: 180, cost: 'Free',     size: 8 },
+    cycling:    { name: 'Cycling',         kind: 'route',  minutes: 150, cost: 'Free',     size: 6 },
+    yoga:       { name: 'Yoga',            kind: 'route',  minutes: 60,  cost: 'Free',     size: 8 },
+    boardgames: { name: 'Board games',     kind: 'player', minutes: 180, cost: 'Free',     size: 6 },
+    gaming:     { name: 'Online gaming',   kind: 'player', minutes: 120, cost: 'Free',     size: 5 }
   };
-  const ORDER = ['football', 'padel', 'hiking', 'swimming', 'running', 'cycling', 'boardgames'];
+  const ORDER = ['football', 'gaelic', 'basketball', 'tennis', 'padel', 'golf', 'gym', 'climbing', 'surfing',
+    'swimming', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'boardgames', 'gaming'];
 
   const LEVELS = {
     player: [
@@ -42,27 +53,27 @@
   const PLACES = {
     Carlow:    { town: 'Carlow', hiking: ['Mount Leinster'], running: ['Oak Park Forest'], cycling: ['Barrow Way towpath'] },
     Cavan:     { town: 'Cavan', hiking: ['Killykeen Forest Park'], running: ['Killykeen Forest Park'] },
-    Clare:     { town: 'Ennis', hiking: ['Cliffs of Moher coastal walk', 'Burren Way, Ballyvaughan'], swimming: ['Pollock Holes, Kilkee', 'Lahinch Beach'], running: ['Lees Road, Ennis'], cycling: ['Loop Head'] },
-    Cork:      { town: 'Cork', padel: true, hiking: ['Gougane Barra Forest Park', 'Hungry Hill, Beara'], swimming: ['Myrtleville', 'Sandycove Island, Kinsale'], running: ['The Marina'], cycling: ['Passage West Greenway'] },
-    Donegal:   { town: 'Letterkenny', hiking: ['Errigal', 'Slieve League cliffs'], swimming: ['Portsalon', 'Rathmullan Beach'], running: ['Glenveagh National Park'], cycling: ['Fanad Head loop'] },
-    Dublin:    { town: 'Dublin', padel: true, hiking: ['Howth Cliff Path', 'Ticknock & Three Rock'], swimming: ['Forty Foot, Sandycove', 'Seapoint', 'Bull Wall, Clontarf'], running: ['Phoenix Park', 'Clontarf Promenade'], cycling: ['Phoenix Park', 'Dublin Bay to Howth'] },
-    Galway:    { town: 'Galway', padel: true, hiking: ['Diamond Hill, Connemara National Park'], swimming: ['Blackrock Diving Tower, Salthill'], running: ['Salthill Promenade'], cycling: ['Connemara loop from Oughterard'] },
-    Kerry:     { town: 'Killarney', padel: true, hiking: ['Carrauntoohil', 'Torc Mountain'], swimming: ['Inch Beach', 'Banna Strand'], running: ['Killarney National Park'], cycling: ['Gap of Dunloe'] },
+    Clare:     { town: 'Ennis', hiking: ['Cliffs of Moher coastal walk', 'Burren Way, Ballyvaughan'], swimming: ['Pollock Holes, Kilkee', 'Lahinch Beach'], running: ['Lees Road, Ennis'], cycling: ['Loop Head'], surfing: ['Lahinch Beach'] },
+    Cork:      { town: 'Cork', padel: true, hiking: ['Gougane Barra Forest Park', 'Hungry Hill, Beara'], swimming: ['Myrtleville', 'Sandycove Island, Kinsale'], running: ['The Marina'], cycling: ['Passage West Greenway'], surfing: ['Garrettstown'], climbing: true },
+    Donegal:   { town: 'Letterkenny', hiking: ['Errigal', 'Slieve League cliffs'], swimming: ['Portsalon', 'Rathmullan Beach'], running: ['Glenveagh National Park'], cycling: ['Fanad Head loop'], surfing: ['Bundoran'] },
+    Dublin:    { town: 'Dublin', padel: true, hiking: ['Howth Cliff Path', 'Ticknock & Three Rock'], swimming: ['Forty Foot, Sandycove', 'Seapoint', 'Bull Wall, Clontarf'], running: ['Phoenix Park', 'Clontarf Promenade'], cycling: ['Phoenix Park', 'Dublin Bay to Howth'], climbing: true },
+    Galway:    { town: 'Galway', padel: true, hiking: ['Diamond Hill, Connemara National Park'], swimming: ['Blackrock Diving Tower, Salthill'], running: ['Salthill Promenade'], cycling: ['Connemara loop from Oughterard'], climbing: true },
+    Kerry:     { town: 'Killarney', padel: true, hiking: ['Carrauntoohil', 'Torc Mountain'], swimming: ['Inch Beach', 'Banna Strand'], running: ['Killarney National Park'], cycling: ['Gap of Dunloe'], surfing: ['Inch Beach'] },
     Kildare:   { town: 'Naas', padel: true, hiking: ['Donadea Forest Park'], running: ['The Curragh plains'], cycling: ['Royal Canal Greenway, Maynooth'] },
     Kilkenny:  { town: 'Kilkenny', hiking: ['Brandon Hill, Graiguenamanagh'], running: ['Kilkenny Castle Park'] },
     Laois:     { town: 'Portlaoise', hiking: ['Glenbarrow, Slieve Bloom'], running: ['Emo Court'] },
     Leitrim:   { town: 'Carrick-on-Shannon', hiking: ['Glencar Waterfall walk'], running: ['Shannon Blueway, Carrick'], cycling: ['Shannon Blueway'] },
-    Limerick:  { town: 'Limerick', padel: true, hiking: ['Ballyhoura Mountains'], running: ['University of Limerick riverside'], cycling: ['Limerick Greenway'] },
+    Limerick:  { town: 'Limerick', padel: true, hiking: ['Ballyhoura Mountains'], running: ['University of Limerick riverside'], cycling: ['Limerick Greenway'], climbing: true },
     Longford:  { town: 'Longford', hiking: ['Corlea Trackway'], running: ['Royal Canal, Longford'], cycling: ['Royal Canal Greenway, Cloondara'] },
     Louth:     { town: 'Dundalk', hiking: ['Slieve Foye, Carlingford'], swimming: ['Clogherhead', 'Blackrock, Dundalk Bay'], running: ['Blackrock Promenade'], cycling: ['Carlingford Greenway'] },
-    Mayo:      { town: 'Westport', hiking: ['Croagh Patrick'], swimming: ['Keel Beach, Achill', 'Bertra Beach'], running: ['Westport Quay'], cycling: ['Great Western Greenway'] },
+    Mayo:      { town: 'Westport', hiking: ['Croagh Patrick'], swimming: ['Keel Beach, Achill', 'Bertra Beach'], running: ['Westport Quay'], cycling: ['Great Western Greenway'], surfing: ['Keel Beach, Achill'] },
     Meath:     { town: 'Navan', hiking: ['Hill of Tara'], swimming: ['Bettystown Beach'], running: ['Bettystown Beach'], cycling: ['Boyne Greenway'] },
     Monaghan:  { town: 'Monaghan', hiking: ['Rossmore Forest Park'], running: ['Rossmore Forest Park'] },
     Offaly:    { town: 'Tullamore', hiking: ['Slieve Bloom, Kinnitty'], running: ['Lough Boora Discovery Park'], cycling: ['Grand Canal Greenway'] },
     Roscommon: { town: 'Roscommon', hiking: ['Lough Key Forest Park'], running: ['Lough Key Forest Park'] },
-    Sligo:     { town: 'Sligo', hiking: ['Benbulben, Gortarowey loop', 'Knocknarea'], swimming: ['Rosses Point', 'Strandhill'], running: ['Strandhill seafront'] },
+    Sligo:     { town: 'Sligo', hiking: ['Benbulben, Gortarowey loop', 'Knocknarea'], swimming: ['Rosses Point', 'Strandhill'], running: ['Strandhill seafront'], surfing: ['Strandhill'] },
     Tipperary: { town: 'Clonmel', hiking: ['Galtymore', "Devil's Bit"], swimming: ['Dromineer, Lough Derg'], running: ['Suir Blueway, Clonmel'], cycling: ['Suir Blueway, Clonmel to Carrick'] },
-    Waterford: { town: 'Waterford', padel: true, hiking: ['Mahon Falls, Comeraghs'], swimming: ['Guillamene, Tramore', 'Tramore Beach'], running: ['Tramore Promenade'], cycling: ['Waterford Greenway'] },
+    Waterford: { town: 'Waterford', padel: true, hiking: ['Mahon Falls, Comeraghs'], swimming: ['Guillamene, Tramore', 'Tramore Beach'], running: ['Tramore Promenade'], cycling: ['Waterford Greenway'], surfing: ['Tramore Beach'] },
     Westmeath: { town: 'Athlone', running: ['Athlone riverside'], cycling: ['Old Rail Trail Greenway'] },
     Wexford:   { town: 'Wexford', hiking: ['Forth Mountain'], swimming: ['Curracloe Beach', 'Rosslare Strand'], running: ['Curracloe Beach'], cycling: ['Hook Peninsula loop'] },
     Wicklow:   { town: 'Bray', hiking: ['Glendalough Spinc', 'Djouce', 'Bray Head'], swimming: ['Greystones South Beach', 'Brittas Bay'], running: ['Bray Promenade'], cycling: ['Sally Gap'] }
@@ -75,7 +86,17 @@
     swimming: ['07:00', '07:30', '08:00', '12:30'],
     running: ['07:00', '18:30', '19:00'],
     cycling: ['08:30', '09:00', '10:00'],
-    boardgames: ['19:00', '19:30']
+    boardgames: ['19:00', '19:30'],
+    gaelic: ['19:00', '19:30', '11:00'],
+    basketball: ['19:30', '20:00'],
+    tennis: ['10:00', '18:30', '19:30'],
+    golf: ['10:00', '14:00', '17:30'],
+    gym: ['07:00', '18:00', '19:00'],
+    climbing: ['18:30', '19:30'],
+    surfing: ['08:00', '10:00', '14:00'],
+    walking: ['10:00', '13:00', '19:00'],
+    yoga: ['09:00', '19:00'],
+    gaming: ['20:00', '21:00', '21:30']
   };
 
   const NOTES = {
@@ -85,7 +106,17 @@
     swimming: ['Tow floats recommended. We swim along the shore, no heroics.', 'Short dip and a flask of tea after.', 'Check the forecast the night before, we cancel in big swell.'],
     running: ['Chatty pace, about 6 minutes per km, nobody left behind.', 'Easy 5 km loop, coffee after.', 'Tempo session, warm-up together first.'],
     cycling: ['Road bikes, about 25 km/h average, café stop halfway.', 'Mixed group, we regroup at the top of every climb.', 'Lights and a spare tube please.'],
-    boardgames: ['Bringing Catan and Ticket to Ride, new players welcome.', 'Learning a new game tonight, nobody knows the rules yet.', 'Quick party games, then something longer.']
+    boardgames: ['Bringing Catan and Ticket to Ride, new players welcome.', 'Learning a new game tonight, nobody knows the rules yet.', 'Quick party games, then something longer.'],
+    gaelic: ['Bring a ball if you have one.', 'Seven-a-side, friendly.', 'Mixed group, mostly lads who played underage.'],
+    basketball: ['3 v 3, half court.', 'Pickup run, winners stay on.', 'Bring a light and a dark top.'],
+    tennis: ['Doubles, courts booked.', 'Bring your own racket, balls sorted.', 'Rallying first, then a few sets.'],
+    golf: ['Clubs available to rent.', 'Nine holes, then a coffee.', 'Nobody takes it too seriously.'],
+    gym: ['Looking for a lifting partner.', 'Leg day, spotting each other.', 'Early session before work.'],
+    climbing: ['Bouldering, shoes for rent at the desk.', 'Top-rope, need a belay partner.', 'Beginners welcome, we can show you the basics.'],
+    surfing: ['Check the forecast, we cancel in big swell.', 'Longboards, mellow waves.', 'Wetsuit essential.'],
+    walking: ['Easy pace, coffee after.', 'Lunchtime loop, about 5 km.', 'Dogs welcome on leads.'],
+    yoga: ['Bring a mat.', 'Gentle flow, all welcome.', 'Outdoor if dry, indoors if not.'],
+    gaming: ['Discord link in the chat.', 'Squads, chill vibes, no rage.', 'Trying a new co-op game tonight.']
   };
 
   const HANDLES = [
@@ -128,11 +159,23 @@
         out.push({ id: slug(county + '-' + activity + '-' + name), county: county, activity: activity, name: name });
       };
       add('football', 'Astro pitch, ' + p.town);
+      add('gaelic', 'GAA pitch, ' + p.town);
+      add('basketball', 'Sports hall, ' + p.town);
+      add('tennis', 'Tennis courts, ' + p.town);
       if (p.padel) add('padel', 'Padel courts, ' + p.town);
-      ['hiking', 'swimming', 'running', 'cycling'].forEach(function (a) {
+      add('golf', 'Pitch and putt, ' + p.town);
+      add('gym', 'Gym, ' + p.town);
+      if (p.climbing) add('climbing', 'Climbing wall, ' + p.town);
+      ['surfing', 'hiking', 'swimming', 'running', 'cycling'].forEach(function (a) {
         (p[a] || []).forEach(function (name) { add(a, name); });
       });
+      // Walks: anywhere you can run or cycle, without duplicates.
+      const walks = [];
+      (p.running || []).concat(p.cycling || []).forEach(function (name) { if (walks.indexOf(name) < 0) walks.push(name); });
+      walks.forEach(function (name) { add('walking', name); });
+      add('yoga', 'Community centre, ' + p.town);
       add('boardgames', 'Community centre, ' + p.town);
+      ['PC', 'PlayStation', 'Xbox', 'Nintendo Switch'].forEach(function (platform) { add('gaming', 'Online · ' + platform); });
     });
     return out;
   }

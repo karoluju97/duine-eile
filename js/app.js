@@ -20,7 +20,17 @@
     swimming: "Nice one. Water's about 12 degrees, bring something warm for after.",
     running: "Welcome aboard. We'll set off right on time.",
     cycling: 'Perfect, we roll out on the dot. Bring a spare tube.',
-    boardgames: "Great, that's a full table. Snacks welcome."
+    boardgames: "Great, that's a full table. Snacks welcome.",
+    gaelic: "Great, that's us with full sides. See you at the pitch.",
+    basketball: "Nice, that's teams sorted.",
+    tennis: 'Brilliant, doubles is on.',
+    golf: 'Grand, tee time is booked.',
+    gym: 'Sound, see you there.',
+    climbing: "Great, I'll meet you at the front desk.",
+    surfing: "Class. I'll post a surf check that morning.",
+    walking: "Lovely, we'll head off on time.",
+    yoga: 'Lovely, see you there.',
+    gaming: "Nice one, I'll drop the invite in here before we start."
   };
   const REPLIES = [
     'Grand, see you there.',
@@ -244,7 +254,7 @@
             '<div class="field"><label for="si-email">Email</label><input id="si-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" value="' + esc(ui.lastEmail || '') + '"></div>' +
             '<div class="field"><div class="label-row"><label for="si-pass">Password</label>' + (login ? '<button type="button" class="link-btn" data-action="forgot">Forgot it?</button>' : '') + '</div>' +
               '<input id="si-pass" name="password" type="password" autocomplete="' + (login ? 'current-password' : 'new-password') + '">' +
-              (login ? '' : '<span class="hint">At least 8 characters.</span>') + '</div>' +
+              '</div>' +
             '<button class="btn btn-primary btn-lg btn-block" type="submit">' + (login ? 'Log in' : 'Create account') + '</button>' +
           '</form>' +
           '<div class="divider"><span>or</span></div>' +
@@ -253,7 +263,6 @@
             ? 'New here? <button type="button" class="link-btn strong" data-action="signin-mode" data-value="create">Create an account</button>'
             : 'Already have an account? <button type="button" class="link-btn strong" data-action="signin-mode" data-value="login">Log in</button>') + '</p>' +
           '<p class="muted small center">18+ only.</p>' +
-          '<p class="demo-note">Demo: no real account is made and passwords are never saved.</p>' +
         '</div>' +
       '</section>';
   }
@@ -283,12 +292,12 @@
     let html;
     if (step === 'username') {
       html = stepHead(1, '#/') +
-        joinTitle(d.provider !== 'email' ? 'Signed in with ' + d.provider : '', 'Pick a username', 'It\'s all anyone sees. No real names, no photos needed.') +
+        joinTitle('', 'Pick a username') +
         errorBox() +
         '<form class="join-form" data-form="j-username" novalidate>' +
           '<div class="field"><label for="j-name">Username</label>' +
           '<input id="j-name" class="input-lg" name="username" autocomplete="off" maxlength="20" placeholder="e.g. sunday_swimmer" value="' + esc(d.username || '') + '">' +
-          '<span class="hint">3 to 20 letters, numbers or underscores. You can change it later.</span></div>' +
+          '</div>' +
           '<div class="join-actions"><button class="btn btn-dark btn-lg btn-block" type="submit">Next</button></div>' +
         '</form>';
     } else if (step === 'age') {
@@ -297,15 +306,15 @@
         return '<button type="button" class="choice' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="j-age" data-value="' + g + '">' + g + '</button>';
       }).join('');
       html = stepHead(2, '#/join/username') +
-        joinTitle('', 'What\'s your age group?', 'Helps you find games with people around your age. We never ask for your birthday.') +
+        joinTitle('', 'What\'s your age group?') +
         '<div class="choice-grid" role="radiogroup" aria-label="Age group">' + chips + '</div>' +
-        '<label class="toggle-card"><span><b>Show it on my profile</b><span class="muted small">Others see "' + esc(d.ageGroup || '22–25') + '", nothing more exact</span></span>' +
+        '<label class="toggle-card"><b>Show it on my profile</b>' +
           '<input type="checkbox" data-change="j-showage"' + (d.showAge !== false ? ' checked' : '') + '></label>' +
         nextBtn('Next', !!d.ageGroup, 'age');
     } else if (step === 'county') {
       html = '<div class="join-wide">' + stepHead(3, '#/join/age') + '</div>' +
         '<div class="county-step">' +
-          joinTitle('', 'Where are you based?', '<span class="only-hover">Hover the map and click your county, or pick it from the list.</span><span class="only-touch">Tap your county on the map, or pick it from the list.</span> You can change it any time.') +
+          joinTitle('', 'Where are you based?') +
           '<div class="map-card">' + mapSvg(d.county) + '</div>' +
           '<div class="selected-bar"><span><span class="muted small">Selected</span><b>' + esc(d.county || 'None yet') + '</b></span></div>' +
           '<div class="county-list">' + countyList(d.county) + '</div>' +
@@ -321,7 +330,7 @@
       }).join('');
       const n = d.activities.length;
       html = stepHead(4, '#/join/county') +
-        joinTitle('', 'What are you into?', 'Pick as many as you like. Only what\'s on in ' + esc(d.county) + ' is shown.') +
+        joinTitle('', 'What are you into?') +
         '<div class="tile-grid">' + tiles + '</div>' +
         nextBtn(n ? 'Next · ' + n + ' picked' : 'Pick at least one', n > 0, 'activities');
     } else {
@@ -337,7 +346,7 @@
       }).join('');
       const last = i === list.length - 1;
       html = stepHead(5, i === 0 ? '#/join/activities' : '#/join/level/' + (i - 1)) +
-        joinTitle(act(a).name + ' · ' + (i + 1) + ' of ' + list.length, act(a).kind === 'player' ? 'How do you play?' : 'What pace suits you?', 'Be honest, it makes for better games. You can change it later.') +
+        joinTitle(act(a).name + ' · ' + (i + 1) + ' of ' + list.length, act(a).kind === 'player' ? 'How do you play?' : 'What pace suits you?') +
         '<div class="choice-list" role="radiogroup" aria-label="Level for ' + esc(act(a).name) + '">' + opts + '</div>' +
         '<div class="join-actions"><button type="button" class="btn btn-dark btn-lg btn-block"' + (chosen ? '' : ' disabled aria-disabled="true"') +
           ' data-action="j-next" data-step="level" data-index="' + i + '">' + (last ? 'Finish' : 'Next: ' + esc(act(list[i + 1]).name)) + '</button></div>';
@@ -381,7 +390,17 @@
       swimming: 'M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2-1.5 4.5-1.5S19 15 21 15M3 19c2 0 2-1.5 4.5-1.5S10 19 12 19s2-1.5 4.5-1.5S19 19 21 19M15 4a2 2 0 1 0 0.01 0M7 11l4-3 3 3',
       running: 'M14 3a2 2 0 1 0 0.01 0M7 21l3-6 3 2v4M10 15l1.5-6 4 2.5 3-1M11.5 9l-3.5 1.5-2 3',
       cycling: 'M5.5 13a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM18.5 13a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM5.5 16.5L10 9h5l3.5 7.5M10 9l2.5 7.5M14 5h2',
-      boardgames: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 8.5h.01M15.5 15.5h.01M12 12h.01'
+      boardgames: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 8.5h.01M15.5 15.5h.01M12 12h.01',
+      gaelic: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM4 9c5 1.5 11 1.5 16 0M4 15c5-1.5 11-1.5 16 0',
+      basketball: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM3 12h18M12 3v18M5.6 5.6c3 3 3 9.8 0 12.8M18.4 5.6c-3 3-3 9.8 0 12.8',
+      tennis: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM5.5 5.8c3.5 3.2 3.5 9.2 0 12.4M18.5 5.8c-3.5 3.2-3.5 9.2 0 12.4',
+      golf: 'M7 21V3l9 4-9 4M4 21h8',
+      gym: 'M3 10v4M6 7v10M18 7v10M21 10v4M6 12h12',
+      climbing: 'M9 4h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4zM9 8v8',
+      surfing: 'M3 18c3 0 3-2 6-2s3 2 6 2s3-2 6-2M15 3c3 1 5 4 4 7l-8 2c-1-4 1-8 4-9z',
+      walking: 'M13 3a2 2 0 1 0 0.01 0M10 21l2-6 2 3v3M12 15l-1-5-3 2v3M11 10l4 1 2 3',
+      yoga: 'M12 3a2 2 0 1 0 0.01 0M12 7v6M5 10l7 3 7-3M7 20l5-3 5 3',
+      gaming: 'M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.2 2L14.5 14h-5l-1.3 1A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4zM8 11v3M6.5 12.5h3M15.5 12h.01M17.5 13.5h.01'
     };
     return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + paths[a] + '"/></svg>';
   }
@@ -539,19 +558,17 @@
         '<section class="people"><h2 class="h-small">Who\'s going · ' + going(g) + ' of ' + g.size + '</h2><div class="avatars">' + avatars + '</div>' +
           (rec ? '<p class="muted small">Organised by <b>' + esc(g.organiser) + '</b> · ' + esc(D.ageGroup(g.organiser)) + ' · turned up to ' + rec.came + ' of ' + rec.total + ' games</p>' : '<p class="muted small">You\'re organising this game.</p>') +
         '</section>' +
-        '<p class="privacy">' + icon('lock') + '<span>Only usernames are shown. No names or phone numbers are shared unless you choose to swap them in the chat.</span></p>' +
       '</section>';
 
     let side;
     if (isJoined(g) || isMine(g)) {
       side = chatPanel(g);
     } else if (isOver(g)) {
-      side = '<div class="card cta"><h2>This game has finished</h2><p class="muted">Have a look for another one this week.</p><a class="btn btn-dark btn-block" href="#/">Find another game</a></div>';
+      side = '<div class="card cta"><h2>This game has finished</h2><a class="btn btn-dark btn-block" href="#/">Find another game</a></div>';
     } else if (spotsLeft(g) === 0) {
-      side = '<div class="card cta"><h2>This game is full</h2><p class="muted">Join the waitlist and you\'ll get the spot if someone drops out.</p><button type="button" class="btn btn-block ' + (isWaiting(g) ? 'btn-outline' : 'btn-dark') + '" data-action="waitlist" data-id="' + g.id + '">' + (isWaiting(g) ? 'Leave waitlist' : 'Join the waitlist') + '</button></div>';
+      side = '<div class="card cta"><h2>This game is full</h2><button type="button" class="btn btn-block ' + (isWaiting(g) ? 'btn-outline' : 'btn-dark') + '" data-action="waitlist" data-id="' + g.id + '">' + (isWaiting(g) ? 'Leave waitlist' : 'Join the waitlist') + '</button></div>';
     } else {
       side = '<div class="card cta"><h2>' + (spotsLeft(g) === 1 ? 'Take the last spot' : spotsLeft(g) + ' spots left') + '</h2>' +
-        '<p class="muted">Saying "I\'m in" opens the group chat for this game. It deletes the day after.</p>' +
         '<button type="button" class="btn btn-primary btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button></div>';
     }
 
@@ -578,7 +595,6 @@
           '<input id="chat-input" name="text" autocomplete="off" maxlength="300" placeholder="Message the group">' +
           '<button class="btn btn-primary" type="submit">Send</button>' +
         '</form>' +
-        '<p class="hint chat-hint">Want to keep in touch? Swap numbers here before it closes.</p>' +
       '</section>';
   }
 
@@ -608,20 +624,19 @@
       '<a class="back" href="#/">' + icon('back') + 'Cancel</a>' +
       '<div class="narrow">' +
         '<h1 class="display">Short a player?</h1>' +
-        '<p class="muted">Takes 30 seconds. People in ' + esc(county) + ' who are into it will see it.</p>' +
         '<form class="card form" data-form="post" novalidate>' +
           (ui.error ? '<p class="error" role="alert">' + esc(ui.error) + '</p>' : '') +
           '<div class="field"><label for="p-act">What are you doing?</label><select id="p-act" name="activity" data-change="post-activity">' +
             acts.map(function (a) { return '<option value="' + a + '"' + (a === first ? ' selected' : '') + '>' + esc(act(a).name) + '</option>'; }).join('') +
           '</select></div>' +
-          '<div class="field"><label for="p-venue">Where</label><select id="p-venue" name="venue">' + venueOptions(county, first, pre && pre.id) + '</select><span class="hint">Only public venues in ' + esc(county) + '. <a href="#/venues">See them all</a></span></div>' +
+          '<div class="field"><label for="p-venue">Where</label><select id="p-venue" name="venue">' + venueOptions(county, first, pre && pre.id) + '</select></div>' +
           '<div class="grid-2">' +
             '<div class="field"><label for="p-date">Date</label><input id="p-date" type="date" name="date" min="' + isoDate(now()) + '" value="' + isoDate(tomorrow) + '"></div>' +
             '<div class="field"><label for="p-time">Time</label><input id="p-time" type="time" name="time" value="19:00"></div>' +
           '</div>' +
           '<div class="grid-2">' +
-            stepper('have', 'Already going', 1, 1, 21, 'Including you') +
-            stepper('need', 'Players needed', 1, 1, 10, 'Spots to fill') +
+            stepper('have', 'Already going (incl. you)', 1, 1, 21) +
+            stepper('need', 'Players needed', 1, 1, 10) +
           '</div>' +
           '<div class="grid-2">' +
             '<div class="field"><label for="p-level">Level</label><select id="p-level" name="level">' + levelOptions(first) + '</select></div>' +
@@ -638,7 +653,7 @@
       '<button type="button" class="step-btn" aria-label="One fewer" data-action="step" data-target="' + name + '" data-delta="-1">−</button>' +
       '<input id="p-' + name + '" name="' + name + '" type="number" inputmode="numeric" min="' + min + '" max="' + max + '" value="' + value + '">' +
       '<button type="button" class="step-btn step-plus" aria-label="One more" data-action="step" data-target="' + name + '" data-delta="1">+</button>' +
-    '</div><span class="hint">' + hint + '</span></div>';
+    '</div></div>';
   }
   function venueOptions(county, activity, selected) {
     return venuesIn(county, activity).map(function (v) {
@@ -670,7 +685,6 @@
   function viewVenues() {
     const county = state.user.county;
     const acts = activitiesIn(county);
-    const missing = D.ORDER.filter(function (a) { return acts.indexOf(a) < 0; });
     const upcoming = allGames().filter(function (g) { return g.county === county && !isOver(g); });
     const groups = acts.map(function (a) {
       const vs = venuesIn(county, a);
@@ -682,10 +696,9 @@
         }).join('') + '</ul></section>';
     }).join('');
     return '<div class="page-head"><div><p class="eyebrow">' + esc(county) + '</p><h1 class="display">What\'s in ' + esc(county) + '</h1>' +
-      '<p class="muted">Activities only show up where there\'s somewhere to do them.</p></div></div>' +
+      '</div></div>' +
       '<div class="venue-grid">' + groups + '</div>' +
-      (missing.length ? '<p class="muted small not-here">Not listed in ' + esc(county) + ' yet: ' + missing.map(function (a) { return esc(act(a).name); }).join(', ') + '.</p>' : '') +
-      '<p class="muted small">Venues are sample data for this demo.</p>';
+      '';
   }
 
   function viewProfile() {
@@ -719,7 +732,7 @@
         '<div class="profile-side">' +
           '<div class="card record"><h2 class="h-small">Show-up record</h2>' +
             '<p class="record-num">' + playedGames + ' <span>games played</span></p>' +
-            '<p class="muted small">Organisers confirm who turned up. Others see "turned up to 12 of 12", never your name.</p></div>' +
+            '</div>' +
           '<div class="card"><h2 class="h-small">Your data</h2><ul class="plain small">' +
             '<li>Only your username is shown to other people.</li>' +
             '<li>Game chats delete at midnight the day after the game.</li>' +
@@ -728,7 +741,7 @@
           '<div class="card"><h2 class="h-small">Account</h2><p class="muted small">' +
             (acc ? (acc.provider === 'email' ? 'Signed in with ' + esc(acc.email) : 'Signed in with ' + esc(acc.provider)) : 'Demo account') + '</p>' +
             '<button type="button" class="btn btn-sm btn-outline" data-action="signout">Sign out</button></div>' +
-          '<div class="card"><h2 class="h-small">Demo</h2><p class="muted small">Everything here is saved in this browser only.</p>' +
+          '<div class="card"><h2 class="h-small">Demo</h2>' +
             '<button type="button" class="btn btn-sm ' + (ui.resetArmed ? 'btn-danger' : 'btn-outline') + '" data-action="reset">' + (ui.resetArmed ? 'Tap again to wipe everything' : 'Reset the demo') + '</button></div>' +
         '</div>' +
       '</div>';
