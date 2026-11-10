@@ -56,6 +56,7 @@
     return {
       user: null, account: null, signedOut: false, draft: null,
       joined: [], waitlist: [], posted: [], chats: {}, reported: {},
+      reports: [], blocked: [], removedGames: [], actioned: {}, seeded: false,
       filters: { activity: 'foryou', level: 'all', day: 'any' }
     };
   }
@@ -188,6 +189,7 @@
       case 'mine': html = viewMine(); title = 'My games'; break;
       case 'venues': html = viewVenues(); title = 'Venues'; break;
       case 'profile': html = viewProfile(); title = 'Profile'; break;
+      case 'admin': html = viewAdmin(); title = 'Review queue'; break;
       case 'welcome': html = viewWelcome(); title = ui.signinMode === 'login' ? 'Log in' : 'Create an account'; break;
       default: page = 'games'; html = viewFeed(); title = 'Games in ' + state.user.county;
     }
@@ -197,6 +199,7 @@
     ui.error = null;
     const log = document.getElementById('chat-log');
     if (log) log.scrollTop = log.scrollHeight;
+    renderSheet();
   }
 
   function renderChrome(page) {
@@ -473,7 +476,7 @@
     if (f.activity === 'foryou' && !mineActs.length) f.activity = 'all';
 
     const today = startOfDay(now());
-    let games = allGames().filter(function (g) { return g.county === county && !isOver(g); });
+    let games = allGames().filter(function (g) { return g.county === county && !isOver(g) && visible(g); });
     games = games.filter(function (g) {
       if (f.activity === 'foryou') return mineActs.indexOf(g.activity) >= 0;
       if (f.activity !== 'all') return g.activity === f.activity;
@@ -580,6 +583,9 @@
         '<section class="people"><h2 class="h-small">Who\'s going · ' + going(g) + ' of ' + g.size + '</h2><div class="avatars">' + avatars + '</div>' +
           (rec ? '<p class="muted small">Organised by <b>' + esc(g.organiser) + '</b> · ' + esc(D.ageGroup(g.organiser)) + ' · turned up to ' + rec.came + ' of ' + rec.total + ' games</p>' : '<p class="muted small">You\'re organising this game.</p>') +
         '</section>' +
+        (isMine(g) ? '' : '<div class="report-row">' +
+          '<button type="button" class="link-btn quiet" data-action="open-report" data-type="game" data-id="' + g.id + '" data-user="' + esc(g.organiser) + '">Report this game</button>' +
+          '<button type="button" class="link-btn quiet" data-action="open-report" data-type="user" data-id="' + g.id + '" data-user="' + esc(g.organiser) + '">Report ' + esc(g.organiser) + '</button></div>') +
       '</section>';
 
     let side;
@@ -594,6 +600,9 @@
         '<button type="button" class="btn btn-primary btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button></div>';
     }
 
+    if (!isMine(g) && !visible(g)) {
+      return '<a class="back" href="#/">' + icon('back') + 'Back to games</a><div class="empty card"><h2>This game is no longer available</h2></div>';
+    }
     return '<a class="back" href="#/">' + icon('back') + 'Back to games</a>' +
       '<div class="detail-layout">' + details + '<aside class="detail-side">' + side + '</aside></div>';
   }
@@ -623,15 +632,16 @@
   function chatMessages(g) {
     const msgs = state.chats[g.id] || [];
     if (!msgs.length) return '<p class="muted small chat-empty">No messages yet. Say hello.</p>';
-    return msgs.map(function (m) {
+    return msgs.filter(function (m) { return state.blocked.indexOf(m.from) < 0; }).map(function (m) {
       const mine = m.from === state.user.username;
+      if (m.removed) return '<div class="msg msg-theirs msg-removed"><p>Message removed</p></div>';
       const reported = state.reported[m.id];
       return '<div class="msg ' + (mine ? 'msg-mine' : 'msg-theirs') + '">' +
         (mine ? '' : '<span class="msg-from">' + esc(m.from) + '</span>') +
         '<p>' + esc(m.text) + '</p>' +
         (mine ? '' : (reported
-          ? '<span class="msg-flag">Reported · kept for review</span>'
-          : '<button type="button" class="msg-report" data-action="report" data-id="' + g.id + '" data-msg="' + m.id + '">Report</button>')) +
+          ? '<span class="msg-flag">Reported</span>'
+          : '<button type="button" class="msg-report" data-action="open-report" data-type="message" data-id="' + g.id + '" data-msg="' + m.id + '" data-user="' + esc(m.from) + '">Report</button>')) +
       '</div>';
     }).join('');
   }
@@ -763,10 +773,148 @@
           '<div class="card"><h2 class="h-small">Account</h2><p class="muted small">' +
             (acc ? (acc.provider === 'email' ? 'Signed in with ' + esc(acc.email) : 'Signed in with ' + esc(acc.provider)) : 'Demo account') + '</p>' +
             '<button type="button" class="btn btn-sm btn-outline" data-action="signout">Sign out</button></div>' +
-          '<div class="card"><h2 class="h-small">Demo</h2>' +
-            '<button type="button" class="btn btn-sm ' + (ui.resetArmed ? 'btn-danger' : 'btn-outline') + '" data-action="reset">' + (ui.resetArmed ? 'Tap again to wipe everything' : 'Reset the demo') + '</button></div>' +
+          (state.blocked.length ? '<div class="card"><h2 class="h-small">Blocked</h2><ul class="blocked-list">' +
+            state.blocked.map(function (b) { return '<li><span>' + esc(b) + '</span><button type="button" class="btn btn-sm btn-outline" data-action="unblock" data-user="' + esc(b) + '">Unblock</button></li>'; }).join('') +
+            '</ul></div>' : '') +
+          '<div class="card"><h2 class="h-small">Demo</h2><div class="chip-row">' +
+            '<a class="btn btn-sm btn-outline" href="#/admin">Review queue</a>' +
+            '<button type="button" class="btn btn-sm ' + (ui.resetArmed ? 'btn-danger' : 'btn-outline') + '" data-action="reset">' + (ui.resetArmed ? 'Tap again to wipe everything' : 'Reset the demo') + '</button></div></div>' +
         '</div>' +
       '</div>';
+  }
+
+  /* ---------- reporting & moderation ---------- */
+  const REASONS = [
+    ['harassment', 'Harassment or abuse'], ['spam', 'Spam or scam'], ['noshow', "Didn't show up"],
+    ['unsafe', 'Unsafe behaviour'], ['underage', 'Under 18'], ['other', 'Something else']
+  ];
+  function reasonName(id) { const r = REASONS.find(function (x) { return x[0] === id; }); return r ? r[1] : id; }
+  function openReports() { return (state.reports || []).filter(function (r) { return r.status === 'open'; }); }
+  function hiddenUsers() {
+    const counts = {};
+    openReports().forEach(function (r) { counts[r.user] = (counts[r.user] || 0) + (r.count || 1); });
+    return Object.keys(counts).filter(function (u) { return counts[u] >= 3; });
+  }
+  function visible(g) {
+    if (isMine(g) || isJoined(g)) return true;
+    if ((state.removedGames || []).indexOf(g.id) >= 0) return false;
+    if ((state.blocked || []).indexOf(g.organiser) >= 0) return false;
+    if ((state.actioned || {})[g.organiser]) return false;
+    return hiddenUsers().indexOf(g.organiser) < 0;
+  }
+
+  function renderSheet() {
+    let el = document.getElementById('sheet');
+    if (!el) { el = document.createElement('div'); el.id = 'sheet'; document.body.appendChild(el); }
+    const r = ui.report;
+    if (!r) { el.innerHTML = ''; document.body.classList.remove('sheet-open'); return; }
+    document.body.classList.add('sheet-open');
+    const title = r.type === 'message' ? 'Report message' : r.type === 'game' ? 'Report this game' : 'Report ' + r.user;
+    let body;
+    if (r.done) {
+      body = '<p class="sheet-done">' + icon('check') + 'Thanks. We\'ll review it.</p>' +
+        (r.reason === 'unsafe' || r.reason === 'underage' ? '<p class="urgent">If anyone is in danger, call 112 or 999.</p>' : '') +
+        '<button type="button" class="btn btn-dark btn-block btn-lg" data-action="close-report">Done</button>';
+    } else {
+      const reasons = REASONS.filter(function (x) { return r.type === 'user' || x[0] !== 'noshow'; }).map(function (x) {
+        const on = r.reason === x[0];
+        return '<button type="button" class="choice' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="report-reason" data-value="' + x[0] + '">' + x[1] + '</button>';
+      }).join('');
+      body = (ui.error ? '<p class="error" role="alert">' + esc(ui.error) + '</p>' : '') +
+        '<form class="sheet-form" data-form="report" novalidate>' +
+          '<div class="choice-list" role="radiogroup" aria-label="Reason">' + reasons + '</div>' +
+          '<div class="field"><label class="sr-only" for="rp-note">Details</label><textarea id="rp-note" name="note" rows="2" maxlength="300" placeholder="Anything else? (optional)">' + esc(r.note || '') + '</textarea></div>' +
+          '<label class="check-line"><input type="checkbox" name="block"' + (r.block ? ' checked' : '') + '><span>Block ' + esc(r.user) + '</span></label>' +
+          '<div class="sheet-actions"><button type="button" class="btn btn-outline btn-lg" data-action="close-report">Cancel</button>' +
+          '<button type="submit" class="btn btn-primary btn-lg">Send report</button></div>' +
+        '</form>';
+    }
+    el.innerHTML = '<div class="sheet-backdrop" data-action="close-report"></div>' +
+      '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><h2 id="sheet-title" class="sheet-title">' + esc(title) + '</h2>' + body + '</div>';
+    if (!r.focused) { r.focused = true; const f = el.querySelector('.choice, .btn'); if (f) f.focus(); }
+  }
+
+  function snapshotFor(r) {
+    const g = getGame(r.gameId);
+    if (r.type === 'message' && g) {
+      const msgs = state.chats[g.id] || [];
+      const i = msgs.findIndex(function (m) { return m.id === r.msgId; });
+      return {
+        title: act(g.activity).name + ' chat · ' + when(g),
+        lines: msgs.slice(Math.max(0, i - 2), i + 3).map(function (m) { return { from: m.from, text: m.text, flagged: m.id === r.msgId }; })
+      };
+    }
+    if (g) return { title: act(g.activity).name + ' · ' + when(g) + ' · ' + VENUES[g.venueId].name, lines: g.note ? [{ from: g.organiser, text: g.note }] : [] };
+    return { title: 'Account', lines: [] };
+  }
+
+  function seedReports() {
+    if (state.seeded) return;
+    state.seeded = true;
+    const local = DATA.games.filter(function (g) { return g.county === state.user.county && !isMine(g); });
+    if (local.length < 2) return;
+    const a = local[0], b = local[1];
+    state.reports.unshift(
+      { id: uid(), type: 'game', gameId: a.id, user: a.organiser, reason: 'spam', count: 3, reporter: '3 people', at: Date.now() - 36e5,
+        snapshot: { title: act(a.activity).name + ' · ' + when(a), lines: [{ from: a.organiser, text: 'Selling cheap match tickets, message me for the link.' }] }, status: 'open' },
+      { id: uid(), type: 'user', gameId: b.id, user: D.pick(Math.random, b.players.length ? b.players : [b.organiser]), reason: 'noshow', count: 1, reporter: b.organiser, at: Date.now() - 72e5,
+        snapshot: { title: 'Account', lines: [] }, status: 'open' }
+    );
+    save();
+  }
+
+  function statementOf(r, action) {
+    const what = r.type === 'message' ? 'your message in a game chat' : r.type === 'game' ? 'your game post' : 'your account';
+    const line = {
+      warn: 'This is a warning about ' + what,
+      remove: 'We removed ' + what,
+      suspend: 'Your account is suspended for 7 days',
+      ban: 'Your account has been closed'
+    }[action];
+    return line + ' because it broke our rules on ' + reasonName(r.reason).toLowerCase() + '. A moderator made this decision on ' +
+      fmtDate(now()) + '. If you think we got it wrong, reply to this message and we\'ll look at it again.';
+  }
+
+  function viewAdmin() {
+    seedReports();
+    const hidden = hiddenUsers();
+    const list = (state.reports || []).slice().sort(function (x, y) {
+      const ox = x.status === 'open' ? 0 : 1, oy = y.status === 'open' ? 0 : 1;
+      if (ox !== oy) return ox - oy;
+      const ux = x.reason === 'unsafe' || x.reason === 'underage' ? 0 : 1, uy = y.reason === 'unsafe' || y.reason === 'underage' ? 0 : 1;
+      if (ux !== uy) return ux - uy;
+      return y.at - x.at;
+    });
+    const cards = list.map(function (r) {
+      const snap = r.snapshot || { title: '', lines: [] };
+      const urgent = r.reason === 'unsafe' || r.reason === 'underage';
+      const tags = '<span class="tag tag-grey">' + (r.type === 'message' ? 'Message' : r.type === 'game' ? 'Game post' : 'Account') + '</span>' +
+        (urgent && r.status === 'open' ? '<span class="tag tag-urgent">Urgent</span>' : '') +
+        (r.status === 'open' && hidden.indexOf(r.user) >= 0 ? '<span class="tag tag-hot">Hidden until reviewed</span>' : '') +
+        (r.status !== 'open' ? '<span class="tag tag-ok">' + (r.action ? { warn: 'Warned', remove: 'Removed', suspend: 'Suspended', ban: 'Banned' }[r.action] : 'Dismissed') + '</span>' : '');
+      const lines = snap.lines.map(function (l) {
+        return '<p class="snap-line' + (l.flagged ? ' flagged' : '') + '"><b>' + esc(l.from) + '</b> ' + esc(l.text) + '</p>';
+      }).join('');
+      const actionsHtml = r.status === 'open'
+        ? '<div class="chip-row">' + [['dismiss', 'Dismiss'], ['warn', 'Warn'], ['remove', 'Remove'], ['suspend', 'Suspend 7 days'], ['ban', 'Ban']]
+            .filter(function (x) { return !(x[0] === 'remove' && r.type === 'user'); })
+            .map(function (x) { return '<button type="button" class="btn btn-sm ' + (x[0] === 'ban' ? 'btn-danger' : 'btn-outline') + '" data-action="moderate" data-id="' + r.id + '" data-value="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div>'
+        : (r.statement ? '<div class="statement"><p class="filter-title">Sent to ' + esc(r.user) + '</p><p>' + esc(r.statement) + '</p></div>' : '') +
+          '<p class="muted small">' + esc(r.reporter === 'You' ? 'You were' : r.reporter + (r.count > 1 ? ' were' : ' was')) + ' told the report was dealt with.</p>';
+      return '<article class="card report-card">' +
+        '<div class="tag-row">' + tags + '</div>' +
+        '<h2 class="h-small">' + esc(reasonName(r.reason)) + ' · ' + esc(r.user) + '</h2>' +
+        '<p class="muted small">Reported by ' + esc(r.reporter) + ' · ' + esc(dayName(new Date(r.at)) + ' ' + fmtTime(new Date(r.at))) + '</p>' +
+        (lines ? '<div class="snapshot">' + (snap.title ? '<p class="filter-title">' + esc(snap.title) + '</p>' : '') + lines + '</div>' : '') +
+        (r.note ? '<p class="report-note">"' + esc(r.note) + '"</p>' : '') +
+        actionsHtml +
+      '</article>';
+    }).join('');
+    const open = openReports().length;
+    return '<a class="back" href="#/profile">' + icon('back') + 'Profile</a>' +
+      '<div class="page-head"><div><p class="eyebrow">Moderator · demo</p><h1 class="display">Review queue</h1>' +
+      '<p class="muted">' + open + ' open</p></div></div>' +
+      '<div class="report-list">' + (cards || '<div class="empty card"><h3>Nothing to review</h3></div>') + '</div>';
   }
 
   /* ---------- actions ---------- */
@@ -807,11 +955,6 @@
       save();
       render();
     },
-    report: function (el) {
-      state.reported[el.dataset.msg] = true;
-      save();
-      chatRefresh(getGame(el.dataset.id));
-    },
     step: function (el) {
       const input = el.closest('form').elements[el.dataset.target];
       const v = (parseInt(input.value, 10) || 0) + parseInt(el.dataset.delta, 10);
@@ -828,6 +971,35 @@
       state = blank();
       save();
       go('#/');
+    },
+    'open-report': function (el) {
+      ui.error = null;
+      ui.report = { type: el.dataset.type, gameId: el.dataset.id, msgId: el.dataset.msg || null, user: el.dataset.user, reason: null, block: false };
+      renderSheet();
+    },
+    'close-report': function () { ui.report = null; ui.error = null; renderSheet(); },
+    'report-reason': function (el) {
+      const f = document.querySelector('form[data-form="report"]');
+      if (f) { ui.report.note = f.elements.note.value; ui.report.block = f.elements.block.checked; }
+      ui.report.reason = el.dataset.value; ui.error = null; renderSheet();
+    },
+    unblock: function (el) { state.blocked = state.blocked.filter(function (b) { return b !== el.dataset.user; }); save(); render(); },
+    moderate: function (el) {
+      const r = state.reports.find(function (x) { return x.id === el.dataset.id; });
+      if (!r) return;
+      const action = el.dataset.value;
+      r.status = action === 'dismiss' ? 'dismissed' : 'actioned';
+      if (action !== 'dismiss') {
+        r.action = action;
+        r.statement = statementOf(r, action);
+        if (action === 'remove' && r.type === 'game') state.removedGames.push(r.gameId);
+        if (action === 'remove' && r.type === 'message') {
+          const m = (state.chats[r.gameId] || []).find(function (x) { return x.id === r.msgId; });
+          if (m) m.removed = true;
+        }
+        if (action === 'suspend' || action === 'ban') state.actioned[r.user] = action;
+      }
+      save(); render();
     },
     signout: function () { state.signedOut = true; ui.signinMode = 'login'; save(); go('#/'); },
     'signin-mode': function (el) { ui.signinMode = el.dataset.value; ui.error = null; render(); },
@@ -900,6 +1072,22 @@
         if (known) { ui.error = 'There\'s already an account with that email. Log in instead.'; return render(); }
         startDraft('email', email);
       }
+    },
+    report: function (f) {
+      const r = ui.report;
+      r.note = f.elements.note.value.trim();
+      r.block = f.elements.block.checked;
+      if (!r.reason) { ui.error = 'Pick a reason.'; return renderSheet(); }
+      ui.error = null;
+      const rec = { id: uid(), type: r.type, gameId: r.gameId, msgId: r.msgId, user: r.user, reason: r.reason, note: r.note,
+        count: 1, reporter: 'You', at: Date.now(), status: 'open' };
+      rec.snapshot = snapshotFor(rec);
+      state.reports.push(rec);
+      if (r.msgId) state.reported[r.msgId] = true;
+      if (r.block && state.blocked.indexOf(r.user) < 0) state.blocked.push(r.user);
+      r.done = true;
+      save();
+      render();
     },
     'j-username': function (f) {
       const name = f.elements.username.value.trim();
@@ -997,6 +1185,7 @@
   });
   // Map: keyboard selection, hover and focus labels.
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && ui.report) { ui.report = null; renderSheet(); return; }
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const el = e.target.closest && e.target.closest('[role="button"][data-action]');
     if (!el || el.tagName === 'BUTTON' || !actions[el.dataset.action]) return;
@@ -1014,6 +1203,7 @@
 
   window.addEventListener('hashchange', function () {
     ui.resetArmed = false;
+    ui.report = null;
     render();
     window.scrollTo(0, 0);
   });

@@ -14,6 +14,8 @@ This repository is a **clickable web demo**. It runs entirely in the browser on 
 - **Venues** page showing what actually exists in your county. Activities only appear where there's somewhere to do them.
 - **I'm in** takes a spot and opens a group chat for that game.
 - **Temporary chat** that deletes at midnight the day after the game. Messages can be reported, and reported messages are kept for review.
+- **Report and block**: report a chat message, a game post or a person with a reason, optionally blocking them. Blocked people's games and messages disappear for you. Reports about unsafe behaviour or under-18s show the emergency numbers.
+- **Review queue** (Profile → Demo): a mock moderator page. Reported messages are kept with the messages around them even after the chat deletes; urgent reports go first; anyone reported by 3+ people is hidden until reviewed. Actions are dismiss, warn, remove, suspend or ban, and each one writes the statement of reasons sent to the person (EU Digital Services Act, Art. 17).
 - **Post a game** by picking a venue from your county's list, the date, how many you need, level and cost.
 - **Profile** to change county or activities at any time.
 
