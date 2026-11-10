@@ -15,6 +15,8 @@
   const ACTIVITIES = {
     football:   { name: '5-a-side',        kind: 'player', minutes: 60,  cost: '€5 each',  size: 10 },
     gaelic:     { name: 'Gaelic football', kind: 'player', minutes: 60,  cost: 'Free',     size: 14 },
+    hurling:    { name: 'Hurling',         kind: 'player', minutes: 60,  cost: 'Free',     size: 14 },
+    hockey:     { name: 'Hockey',          kind: 'player', minutes: 60,  cost: '€5 each',  size: 14 },
     basketball: { name: 'Basketball',      kind: 'player', minutes: 60,  cost: '€4 each',  size: 6 },
     tennis:     { name: 'Tennis',          kind: 'player', minutes: 60,  cost: '€5 each',  size: 4 },
     padel:      { name: 'Padel',           kind: 'player', minutes: 90,  cost: '€8 each',  size: 4 },
@@ -40,7 +42,7 @@
     darts:      { name: 'Darts',           kind: 'player', minutes: 120, cost: 'Free',     size: 4 },
     pool:       { name: 'Pool',            kind: 'player', minutes: 120, cost: '€2 a game', size: 4 }
   };
-  const ORDER = ['football', 'gaelic', 'basketball', 'volleyball', 'tennis', 'padel', 'pickleball', 'badminton',
+  const ORDER = ['football', 'gaelic', 'hurling', 'hockey', 'basketball', 'volleyball', 'tennis', 'padel', 'pickleball', 'badminton',
     'golf', 'gym', 'climbing', 'surfing', 'swimming', 'poolswim', 'running', 'walking', 'hiking', 'cycling', 'yoga', 'dancing',
     'boardgames', 'chess', 'quiz', 'darts', 'pool', 'gaming'];
 
@@ -89,6 +91,9 @@
     Wicklow:   { town: 'Bray', hiking: ['Glendalough Spinc', 'Djouce', 'Bray Head'], swimming: ['Greystones South Beach', 'Brittas Bay'], running: ['Bray Promenade'], cycling: ['Sally Gap'] }
   };
 
+  // Counties with established hockey clubs (the rest would come from Hockey Ireland's club finder).
+  const HOCKEY = ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Kilkenny', 'Wexford', 'Wicklow', 'Kildare', 'Louth'];
+
   const TIMES = {
     football: ['18:30', '19:00', '20:00', '21:00'],
     padel: ['10:30', '12:00', '18:00', '19:30'],
@@ -115,7 +120,9 @@
     quiz: ['20:30', '21:00'],
     darts: ['20:00', '21:00'],
     pool: ['19:30', '20:30'],
-    poolswim: ['07:00', '12:30', '19:00']
+    poolswim: ['07:00', '12:30', '19:00'],
+    hurling: ['19:00', '19:30', '11:00'],
+    hockey: ['19:30', '20:00', '11:00']
   };
 
   const NOTES = {
@@ -144,7 +151,9 @@
     quiz: ['Need one more for our team.', 'General knowledge, music round at the end.', 'Proceeds go to the local club.'],
     darts: ['501, doubles out.', 'Casual arrows, nobody is Luke Littler.', 'Board booked in the back.'],
     pool: ['Winner stays on.', 'Doubles if there are four of us.', 'Bring coins.'],
-    poolswim: ['Lane swim, steady pace.', 'Bring a cap and goggles.', 'Building up to 1 km, nobody racing.']
+    poolswim: ['Lane swim, steady pace.', 'Bring a cap and goggles.', 'Building up to 1 km, nobody racing.'],
+    hurling: ['Helmets on, bring your own hurl.', 'Pucking around then a small-sided game.', 'Spare sliotars in the bag.'],
+    hockey: ['Seven-a-side on the astro.', 'Shin guards and gumshield please.', 'Spare sticks if you need one.']
   };
 
   const HANDLES = [
@@ -188,6 +197,8 @@
       };
       add('football', 'Astro pitch, ' + p.town);
       add('gaelic', 'GAA pitch, ' + p.town);
+      add('hurling', 'GAA pitch, ' + p.town);
+      if (HOCKEY.indexOf(county) >= 0) add('hockey', 'Hockey pitch, ' + p.town);
       add('basketball', 'Sports hall, ' + p.town);
       add('volleyball', 'Sports hall, ' + p.town);
       add('pickleball', 'Sports hall, ' + p.town);
