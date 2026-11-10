@@ -8,7 +8,8 @@ This repository is a **clickable web demo**. It runs entirely in the browser on 
 
 ## What you can try
 
-- **Sign up** with a username, county and the activities you're into (18+ only).
+- **Log in or create an account** with email and password, or continue with Apple, Google or Facebook (simulated in the demo; passwords are never saved).
+- **Sign-up, one question per screen**: username, age group (18–21 up to 56+, optional on your profile), your county on a clickable map of Ireland or from a list, the activities you're into, then your level for each one.
 - **County feed** of games in the next 7 days, filtered by activity, day and level. Games needing one more player go to the top.
 - **Venues** page showing what actually exists in your county. Activities only appear where there's somewhere to do them.
 - **I'm in** takes a spot and opens a group chat for that game.
@@ -38,11 +39,20 @@ GitHub Pages serves it from the `main` branch root.
 | --- | --- |
 | `index.html` | Page shell |
 | `css/styles.css` | Styles (phone and desktop) |
-| `js/data.js` | Counties, activities, levels, venues and sample game generator |
+| `js/data.js` | Counties, provinces, activities, levels, age groups, venues and sample game generator |
+| `js/map-data.js` | County outlines for the sign-up map |
 | `js/app.js` | Routing, views, browser storage and chat |
 
 ## Not in the demo yet
 
-Real accounts (email sign-in link), shared games between people, live chat and the scheduled chat clean-up. The plan is Supabase (EU region) behind this same front end, with venue data pulled from OpenStreetMap and Sport Ireland by a scheduled GitHub Action.
+Real accounts (email and password, Apple, Google and Facebook sign-in), shared games between people, live chat and the scheduled chat clean-up. The plan is Supabase (EU region) behind this same front end, with venue data pulled from OpenStreetMap and Sport Ireland by a scheduled GitHub Action.
+
+## Colours
+
+Palette "Floodlight": navy `#16213A` for text and trust, warm sand `#F7F3EC` background, floodlight orange `#C2410C` for actions, teal `#0F766E` for "you're in" and open spots. All text pairs meet WCAG AA contrast.
+
+## Credits
+
+County map outlines derived from [Natural Earth](https://www.naturalearthdata.com/) admin-1 boundaries (public domain).
 
 Venues and games in the demo are sample data.

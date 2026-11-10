@@ -200,6 +200,18 @@
     return { venues: venues, games: games };
   }
 
+  const AGE_GROUPS = ['18–21', '22–25', '26–30', '31–35', '36–45', '46–55', '56+'];
+
+  const PROVINCES = [
+    { name: 'Munster', counties: ['Clare', 'Cork', 'Kerry', 'Limerick', 'Tipperary', 'Waterford'] },
+    { name: 'Leinster', counties: ['Carlow', 'Dublin', 'Kildare', 'Kilkenny', 'Laois', 'Longford', 'Louth', 'Meath', 'Offaly', 'Westmeath', 'Wexford', 'Wicklow'] },
+    { name: 'Connacht', counties: ['Galway', 'Leitrim', 'Mayo', 'Roscommon', 'Sligo'] },
+    { name: 'Ulster (ROI)', counties: ['Cavan', 'Donegal', 'Monaghan'] }
+  ];
+
+  // A made-up but stable age group for sample users.
+  function ageGroup(handle) { return AGE_GROUPS[hash(handle + ':age') % 6]; }
+
   // A made-up but stable show-up record for sample users.
   function record(handle) {
     const h = hash(handle);
@@ -210,6 +222,7 @@
 
   window.DuineData = {
     COUNTIES: COUNTIES, ACTIVITIES: ACTIVITIES, ORDER: ORDER, LEVELS: LEVELS,
-    HANDLES: HANDLES, build: build, record: record, pick: pick
+    HANDLES: HANDLES, AGE_GROUPS: AGE_GROUPS, PROVINCES: PROVINCES,
+    build: build, record: record, ageGroup: ageGroup, pick: pick
   };
 })();

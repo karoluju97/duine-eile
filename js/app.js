@@ -32,7 +32,11 @@
 
   /* ---------- state ---------- */
   function blank() {
-    return { user: null, joined: [], waitlist: [], posted: [], chats: {}, reported: {}, filters: { activity: 'foryou', level: 'all', day: 'any' } };
+    return {
+      user: null, account: null, signedOut: false, draft: null,
+      joined: [], waitlist: [], posted: [], chats: {}, reported: {},
+      filters: { activity: 'foryou', level: 'all', day: 'any' }
+    };
   }
   function load() {
     try {
@@ -48,7 +52,10 @@
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
   }
   let state = load();
-  const ui = { resetArmed: false, error: null, copied: false };
+  const ui = { resetArmed: false, error: null, copied: false, signinMode: 'login' };
+  const MAP = window.DuineMap;
+  const JOIN_STEPS = ['username', 'age', 'county', 'activities', 'level'];
+  function signedIn() { return !!state.user && !state.signedOut; }
 
   /* ---------- helpers ---------- */
   function esc(s) {
@@ -107,8 +114,8 @@
     if (isOver(g)) return '<span class="tag tag-grey">Finished</span>';
     const left = spotsLeft(g);
     if (left === 0) return '<span class="tag tag-grey">' + (isJoined(g) || isMine(g) ? 'Full' : 'Full · waitlist') + '</span>';
-    if (left === 1) return '<span class="tag tag-amber">1 spot left</span>';
-    return '<span class="tag tag-green">' + left + ' spots</span>';
+    if (left === 1) return '<span class="tag tag-hot">1 spot left</span>';
+    return '<span class="tag tag-ok">' + left + ' spots</span>';
   }
 
   function icon(name) {
@@ -148,17 +155,19 @@
   function render() {
     const r = parseHash();
     let page = r.parts[0] || 'games';
-    if (!state.user) page = 'welcome';
-    else if (page === 'welcome') page = 'games';
+    if (!signedIn()) {
+      if (page !== 'join' || !state.draft) page = 'welcome';
+    } else if (page === 'welcome' || page === 'join') page = 'games';
 
     let html, title;
     switch (page) {
+      case 'join': html = viewJoin(r.parts[1], parseInt(r.parts[2], 10) || 0); title = 'Create your account'; break;
       case 'game': html = viewGame(r.parts[1]); title = 'Game'; break;
       case 'post': html = viewPost(r.params); title = 'Post a game'; break;
       case 'mine': html = viewMine(); title = 'My games'; break;
       case 'venues': html = viewVenues(); title = 'Venues'; break;
       case 'profile': html = viewProfile(); title = 'Profile'; break;
-      case 'welcome': html = viewWelcome(); title = 'Find one more'; break;
+      case 'welcome': html = viewWelcome(); title = ui.signinMode === 'login' ? 'Log in' : 'Create an account'; break;
       default: page = 'games'; html = viewFeed(); title = 'Games in ' + state.user.county;
     }
     renderChrome(page);
@@ -170,8 +179,8 @@
   }
 
   function renderChrome(page) {
-    if (!state.user) {
-      topEl.innerHTML = '<div class="topbar-inner"><a class="brand" href="#/"><span class="brand-mark" aria-hidden="true">+1</span><span>Duine Eile</span></a></div>';
+    if (!signedIn()) {
+      topEl.innerHTML ='<div class="topbar-inner"><a class="brand" href="#/"><span class="brand-mark" aria-hidden="true">+1</span><span>Duine Eile</span></a></div>';
       tabEl.innerHTML = '';
       tabEl.hidden = true;
       return;
@@ -207,34 +216,211 @@
   }
 
   /* ---------- views ---------- */
+  /* ----- sign in ----- */
   function viewWelcome() {
-    const counties = D.COUNTIES.map(function (c) { return '<option>' + c + '</option>'; }).join('');
-    const acts = D.ORDER.map(function (a) {
-      return '<label class="check-chip"><input type="checkbox" name="activities" value="' + a + '"><span>' + esc(act(a).name) + '</span></label>';
+    const login = ui.signinMode === 'login';
+    const social = ['Apple', 'Google', 'Facebook'].map(function (p) {
+      return '<button type="button" class="btn btn-lg btn-block ' + (p === 'Apple' ? 'btn-dark' : 'btn-outline') + '" data-action="social" data-provider="' + p + '">Continue with ' + p + '</button>';
     }).join('');
     return '' +
-      '<section class="hero">' +
-        '<div class="hero-copy">' +
-          '<p class="eyebrow">Duine eile · one more person</p>' +
+      '<section class="auth">' +
+        '<div class="auth-intro">' +
+          '<span class="brand-tile" aria-hidden="true">+1</span>' +
           '<h1 class="display">Short a player?<br>Find one more.</h1>' +
-          '<p class="lead">Games, hikes, swims and board game nights across Ireland, sorted by county. Join with a username, no names or numbers on show.</p>' +
+          '<p class="lead">Games, hikes, swims and board game nights near you.</p>' +
           '<ol class="steps">' +
             '<li><b>Pick your county.</b> See what\'s on near you this week.</li>' +
             '<li><b>Say "I\'m in".</b> A group chat opens for that game.</li>' +
             '<li><b>Turn up.</b> The chat deletes the day after.</li>' +
           '</ol>' +
         '</div>' +
-        '<form class="card form signup" data-form="signup" novalidate>' +
-          '<h2>Make your account</h2>' +
-          '<p class="muted small">Demo only: your account stays in this browser. The real site would sign you in with an email link, never shown to anyone.</p>' +
+        '<div class="card auth-card">' +
+          '<div class="seg" role="group" aria-label="Log in or create an account">' +
+            '<button type="button" class="seg-btn' + (login ? ' on' : '') + '" aria-pressed="' + login + '" data-action="signin-mode" data-value="login">Log in</button>' +
+            '<button type="button" class="seg-btn' + (!login ? ' on' : '') + '" aria-pressed="' + !login + '" data-action="signin-mode" data-value="create">Create account</button>' +
+          '</div>' +
           (ui.error ? '<p class="error" role="alert">' + esc(ui.error) + '</p>' : '') +
-          '<div class="field"><label for="su-name">Username</label><input id="su-name" name="username" autocomplete="off" maxlength="20" placeholder="e.g. sunday_swimmer" required><span class="hint">3 to 20 letters, numbers or underscores.</span></div>' +
-          '<div class="field"><label for="su-county">County</label><select id="su-county" name="county">' + counties.replace('<option>Cork</option>', '<option selected>Cork</option>') + '</select><span class="hint">You can change it any time.</span></div>' +
-          '<fieldset class="field"><legend>What are you into?</legend><div class="chip-row">' + acts + '</div></fieldset>' +
-          '<label class="check-line"><input type="checkbox" name="adult" required><span>I\'m 18 or over</span></label>' +
-          '<button class="btn btn-green btn-block" type="submit">Start finding games</button>' +
-        '</form>' +
+          '<form class="auth-form" data-form="signin" novalidate>' +
+            '<div class="field"><label for="si-email">Email</label><input id="si-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" value="' + esc(ui.lastEmail || '') + '"></div>' +
+            '<div class="field"><div class="label-row"><label for="si-pass">Password</label>' + (login ? '<button type="button" class="link-btn" data-action="forgot">Forgot it?</button>' : '') + '</div>' +
+              '<input id="si-pass" name="password" type="password" autocomplete="' + (login ? 'current-password' : 'new-password') + '">' +
+              (login ? '' : '<span class="hint">At least 8 characters.</span>') + '</div>' +
+            '<button class="btn btn-primary btn-lg btn-block" type="submit">' + (login ? 'Log in' : 'Create account') + '</button>' +
+          '</form>' +
+          '<div class="divider"><span>or</span></div>' +
+          '<div class="social">' + social + '</div>' +
+          '<p class="auth-foot">' + (login
+            ? 'New here? <button type="button" class="link-btn strong" data-action="signin-mode" data-value="create">Create an account</button>'
+            : 'Already have an account? <button type="button" class="link-btn strong" data-action="signin-mode" data-value="login">Log in</button>') + '</p>' +
+          '<p class="muted small center">18+ only.</p>' +
+          '<p class="demo-note">Demo: no real account is made and passwords are never saved.</p>' +
+        '</div>' +
       '</section>';
+  }
+
+  /* ----- sign-up steps, one question per screen ----- */
+  function stepHead(n, back) {
+    let bars = '';
+    for (let i = 1; i <= JOIN_STEPS.length; i++) bars += '<span class="' + (i <= n ? 'done' : '') + '"></span>';
+    return '<div class="step-head">' +
+      '<div class="step-top"><a class="icon-btn" href="' + back + '" aria-label="Back">' + icon('back') + '</a>' +
+      '<span class="step-count">Step ' + n + ' of ' + JOIN_STEPS.length + '</span></div>' +
+      '<div class="step-bars" aria-hidden="true">' + bars + '</div></div>';
+  }
+  function joinTitle(eyebrow, title, sub) {
+    return '<div class="join-title">' + (eyebrow ? '<p class="eyebrow">' + esc(eyebrow) + '</p>' : '') +
+      '<h1 class="display">' + esc(title) + '</h1>' + (sub ? '<p class="lead">' + sub + '</p>' : '') + '</div>';
+  }
+  function nextBtn(label, ok, step) {
+    return '<div class="join-actions"><button type="button" class="btn btn-dark btn-lg btn-block"' + (ok ? '' : ' disabled aria-disabled="true"') +
+      ' data-action="j-next" data-step="' + step + '">' + esc(label) + '</button></div>';
+  }
+  function errorBox() { return ui.error ? '<p class="error" role="alert">' + esc(ui.error) + '</p>' : ''; }
+
+  function viewJoin(step, sub) {
+    const d = state.draft;
+    if (JOIN_STEPS.indexOf(step) < 0) step = 'username';
+    let html;
+    if (step === 'username') {
+      html = stepHead(1, '#/') +
+        joinTitle(d.provider !== 'email' ? 'Signed in with ' + d.provider : '', 'Pick a username', 'It\'s all anyone sees. No real names, no photos needed.') +
+        errorBox() +
+        '<form class="join-form" data-form="j-username" novalidate>' +
+          '<div class="field"><label for="j-name">Username</label>' +
+          '<input id="j-name" class="input-lg" name="username" autocomplete="off" maxlength="20" placeholder="e.g. sunday_swimmer" value="' + esc(d.username || '') + '">' +
+          '<span class="hint">3 to 20 letters, numbers or underscores. You can change it later.</span></div>' +
+          '<div class="join-actions"><button class="btn btn-dark btn-lg btn-block" type="submit">Next</button></div>' +
+        '</form>';
+    } else if (step === 'age') {
+      const chips = D.AGE_GROUPS.map(function (g) {
+        const on = d.ageGroup === g;
+        return '<button type="button" class="choice' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="j-age" data-value="' + g + '">' + g + '</button>';
+      }).join('');
+      html = stepHead(2, '#/join/username') +
+        joinTitle('', 'What\'s your age group?', 'Helps you find games with people around your age. We never ask for your birthday.') +
+        '<div class="choice-grid" role="radiogroup" aria-label="Age group">' + chips + '</div>' +
+        '<label class="toggle-card"><span><b>Show it on my profile</b><span class="muted small">Others see "' + esc(d.ageGroup || '22–25') + '", nothing more exact</span></span>' +
+          '<input type="checkbox" data-change="j-showage"' + (d.showAge !== false ? ' checked' : '') + '></label>' +
+        nextBtn('Next', !!d.ageGroup, 'age');
+    } else if (step === 'county') {
+      html = '<div class="join-wide">' + stepHead(3, '#/join/age') + '</div>' +
+        '<div class="county-step">' +
+          joinTitle('', 'Where are you based?', '<span class="only-hover">Hover the map and click your county, or pick it from the list.</span><span class="only-touch">Tap your county on the map, or pick it from the list.</span> You can change it any time.') +
+          '<div class="map-card">' + mapSvg(d.county) + '</div>' +
+          '<div class="selected-bar"><span><span class="muted small">Selected</span><b>' + esc(d.county || 'None yet') + '</b></span></div>' +
+          '<div class="county-list">' + countyList(d.county) + '</div>' +
+          nextBtn(d.county ? 'Next · ' + d.county : 'Pick a county', !!d.county, 'county') +
+        '</div>';
+    } else if (step === 'activities') {
+      const acts = activitiesIn(d.county);
+      d.activities = (d.activities || []).filter(function (a) { return acts.indexOf(a) >= 0; });
+      const tiles = acts.map(function (a) {
+        const on = d.activities.indexOf(a) >= 0;
+        return '<button type="button" class="tile' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-action="j-act" data-value="' + a + '">' +
+          actIcon(a) + '<span>' + esc(act(a).name) + '</span></button>';
+      }).join('');
+      const n = d.activities.length;
+      html = stepHead(4, '#/join/county') +
+        joinTitle('', 'What are you into?', 'Pick as many as you like. Only what\'s on in ' + esc(d.county) + ' is shown.') +
+        '<div class="tile-grid">' + tiles + '</div>' +
+        nextBtn(n ? 'Next · ' + n + ' picked' : 'Pick at least one', n > 0, 'activities');
+    } else {
+      const list = d.activities || [];
+      if (!list.length) { location.hash = '#/join/activities'; return ''; }
+      const i = Math.min(sub, list.length - 1);
+      const a = list[i];
+      const chosen = (d.levels || {})[a];
+      const opts = levelsFor(a).map(function (l) {
+        const on = chosen === l.id;
+        return '<button type="button" class="choice choice-wide' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-action="j-level" data-act="' + a + '" data-value="' + l.id + '">' +
+          '<b>' + esc(l.name) + '</b><span>' + esc(l.desc) + '</span></button>';
+      }).join('');
+      const last = i === list.length - 1;
+      html = stepHead(5, i === 0 ? '#/join/activities' : '#/join/level/' + (i - 1)) +
+        joinTitle(act(a).name + ' · ' + (i + 1) + ' of ' + list.length, act(a).kind === 'player' ? 'How do you play?' : 'What pace suits you?', 'Be honest, it makes for better games. You can change it later.') +
+        '<div class="choice-list" role="radiogroup" aria-label="Level for ' + esc(act(a).name) + '">' + opts + '</div>' +
+        '<div class="join-actions"><button type="button" class="btn btn-dark btn-lg btn-block"' + (chosen ? '' : ' disabled aria-disabled="true"') +
+          ' data-action="j-next" data-step="level" data-index="' + i + '">' + (last ? 'Finish' : 'Next: ' + esc(act(list[i + 1]).name)) + '</button></div>';
+    }
+    return '<section class="join join-' + step + '">' + html + '</section>';
+  }
+
+  function countyList(selected) {
+    return D.PROVINCES.map(function (p) {
+      return '<div class="province"><h2 class="filter-title">' + esc(p.name) + '</h2><div class="chip-row">' +
+        p.counties.map(function (c) {
+          const on = c === selected;
+          return '<button type="button" class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-action="j-county" data-value="' + c + '">' + c + '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
+  function mapSvg(selected) {
+    const parts = Object.keys(MAP.counties).map(function (name) {
+      const c = MAP.counties[name];
+      if (name === 'NI') return '<path class="ni" d="' + c.d + '"/>';
+      const on = name === selected;
+      return '<path class="county' + (on ? ' on' : '') + '" d="' + c.d + '" role="button" tabindex="0" aria-label="' + name + '" aria-pressed="' + on + '" data-action="j-county" data-value="' + name + '"/>';
+    }).join('');
+    const sel = selected && MAP.counties[selected]
+      ? '<text class="map-sel" x="' + MAP.counties[selected].c[0] + '" y="' + (MAP.counties[selected].c[1] + 5) + '" text-anchor="middle">' + esc(selected) + '</text>' : '';
+    const ni = MAP.counties.NI.c;
+    return '<svg class="ireland" viewBox="0 0 ' + MAP.w + ' ' + MAP.h + '" role="group" aria-label="Map of Ireland. Choose your county.">' +
+      '<g class="counties">' + parts + '</g>' + sel +
+      '<text class="map-ni" x="' + (ni[0] + 18) + '" y="' + (ni[1] - 4) + '" text-anchor="middle">Northern Ireland</text>' +
+      '<text class="map-ni" x="' + (ni[0] + 18) + '" y="' + (ni[1] + 12) + '" text-anchor="middle">not covered yet</text>' +
+      '<g id="map-tip" visibility="hidden" aria-hidden="true"><rect rx="14" height="28"/><text text-anchor="middle"></text></g>' +
+    '</svg>';
+  }
+
+  function actIcon(a) {
+    const paths = {
+      football: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM12 8l3.8 2.8-1.5 4.4H9.7L8.2 10.8z',
+      padel: 'M12 2.5c3.6 0 6 2.6 6 6.2c0 3.3-2.3 5.8-4.5 6.6V21h-3v-5.7C8.3 14.5 6 12 6 8.7C6 5.1 8.4 2.5 12 2.5zM10 7h.01M14 7h.01M12 10h.01',
+      hiking: 'M3 20l6-10 4 6 3-4 5 8z',
+      swimming: 'M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2-1.5 4.5-1.5S19 15 21 15M3 19c2 0 2-1.5 4.5-1.5S10 19 12 19s2-1.5 4.5-1.5S19 19 21 19M15 4a2 2 0 1 0 0.01 0M7 11l4-3 3 3',
+      running: 'M14 3a2 2 0 1 0 0.01 0M7 21l3-6 3 2v4M10 15l1.5-6 4 2.5 3-1M11.5 9l-3.5 1.5-2 3',
+      cycling: 'M5.5 13a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM18.5 13a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM5.5 16.5L10 9h5l3.5 7.5M10 9l2.5 7.5M14 5h2',
+      boardgames: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 8.5h.01M15.5 15.5h.01M12 12h.01'
+    };
+    return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + paths[a] + '"/></svg>';
+  }
+
+  function showTip(el) {
+    const tip = document.getElementById('map-tip');
+    if (!tip) return;
+    const name = el.dataset.value;
+    const c = MAP.counties[name].c;
+    const w = name.length * 8 + 26;
+    const rect = tip.querySelector('rect');
+    const text = tip.querySelector('text');
+    rect.setAttribute('x', c[0] - w / 2); rect.setAttribute('y', c[1] - 40); rect.setAttribute('width', w);
+    text.setAttribute('x', c[0]); text.setAttribute('y', c[1] - 21);
+    text.textContent = name;
+    tip.setAttribute('visibility', 'visible');
+  }
+  function hideTip() {
+    const tip = document.getElementById('map-tip');
+    if (tip) tip.setAttribute('visibility', 'hidden');
+  }
+
+  function startDraft(provider, email) {
+    state.draft = { provider: provider, email: email || null, username: '', ageGroup: null, showAge: true, county: null, activities: [], levels: {} };
+    save();
+    go('#/join/username');
+  }
+  function finishJoin() {
+    const d = state.draft;
+    state.user = {
+      username: d.username, county: d.county, activities: d.activities.slice(),
+      ageGroup: d.ageGroup, showAge: d.showAge !== false, levels: Object.assign({}, d.levels)
+    };
+    state.account = { email: d.email, provider: d.provider };
+    state.signedOut = false;
+    state.draft = null;
+    state.filters = { activity: 'foryou', level: 'all', day: 'any' };
+    save();
+    go('#/');
   }
 
   function viewFeed() {
@@ -284,7 +470,7 @@
     const resetLink = (f.activity !== 'all' || f.day !== 'any' || f.level !== 'all')
       ? '<button type="button" class="btn btn-outline" data-action="clear-filters">Show everything</button>' : '';
     const list = games.length ? games.map(card).join('') :
-      '<div class="empty card"><h3>Nothing matches yet</h3><p class="muted">Try another day or activity, or be the first to post one in ' + esc(county) + '.</p><div class="chip-row"><a class="btn btn-green" href="#/post">Post a game</a>' + resetLink + '</div></div>';
+      '<div class="empty card"><h3>Nothing matches yet</h3><p class="muted">Try another day or activity, or be the first to post one in ' + esc(county) + '.</p><div class="chip-row"><a class="btn btn-primary" href="#/post">Post a game</a>' + resetLink + '</div></div>';
 
     const oneMore = games.filter(function (g) { return spotsLeft(g) === 1; }).length;
 
@@ -310,9 +496,9 @@
     const a = act(g.activity);
     let btn;
     if (isMine(g)) btn = '<span class="pill pill-dark">Organising</span>';
-    else if (isJoined(g)) btn = '<span class="pill pill-green">' + icon('check') + 'You\'re in</span>';
+    else if (isJoined(g)) btn = '<span class="pill pill-ok">' + icon('check') + 'You\'re in</span>';
     else if (spotsLeft(g) === 0) btn = '<button type="button" class="btn btn-sm btn-outline" data-action="waitlist" data-id="' + g.id + '">' + (isWaiting(g) ? 'On waitlist' : 'Join waitlist') + '</button>';
-    else btn = '<button type="button" class="btn btn-sm btn-green" data-action="join" data-id="' + g.id + '">I\'m in</button>';
+    else btn = '<button type="button" class="btn btn-sm btn-primary" data-action="join" data-id="' + g.id + '">I\'m in</button>';
     return '' +
       '<article class="card game-card">' +
         '<div class="card-top"><span class="eyebrow">' + esc(a.name) + ' · ' + esc(levelName(g.level)) + '</span>' + spotTag(g) + '</div>' +
@@ -351,7 +537,7 @@
         '</dl>' +
         (g.note ? '<blockquote class="note"><span class="note-from">' + esc(g.organiser) + ' says</span>' + esc(g.note) + '</blockquote>' : '') +
         '<section class="people"><h2 class="h-small">Who\'s going · ' + going(g) + ' of ' + g.size + '</h2><div class="avatars">' + avatars + '</div>' +
-          (rec ? '<p class="muted small">Organised by <b>' + esc(g.organiser) + '</b> · turned up to ' + rec.came + ' of ' + rec.total + ' games</p>' : '<p class="muted small">You\'re organising this game.</p>') +
+          (rec ? '<p class="muted small">Organised by <b>' + esc(g.organiser) + '</b> · ' + esc(D.ageGroup(g.organiser)) + ' · turned up to ' + rec.came + ' of ' + rec.total + ' games</p>' : '<p class="muted small">You\'re organising this game.</p>') +
         '</section>' +
         '<p class="privacy">' + icon('lock') + '<span>Only usernames are shown. No names or phone numbers are shared unless you choose to swap them in the chat.</span></p>' +
       '</section>';
@@ -366,7 +552,7 @@
     } else {
       side = '<div class="card cta"><h2>' + (spotsLeft(g) === 1 ? 'Take the last spot' : spotsLeft(g) + ' spots left') + '</h2>' +
         '<p class="muted">Saying "I\'m in" opens the group chat for this game. It deletes the day after.</p>' +
-        '<button type="button" class="btn btn-green btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button></div>';
+        '<button type="button" class="btn btn-primary btn-block btn-lg" data-action="join" data-id="' + g.id + '">I\'m in</button></div>';
     }
 
     return '<a class="back" href="#/">' + icon('back') + 'Back to games</a>' +
@@ -390,7 +576,7 @@
         '<form class="chat-form" data-form="chat" data-id="' + g.id + '">' +
           '<label class="sr-only" for="chat-input">Message the group</label>' +
           '<input id="chat-input" name="text" autocomplete="off" maxlength="300" placeholder="Message the group">' +
-          '<button class="btn btn-green" type="submit">Send</button>' +
+          '<button class="btn btn-primary" type="submit">Send</button>' +
         '</form>' +
         '<p class="hint chat-hint">Want to keep in touch? Swap numbers here before it closes.</p>' +
       '</section>';
@@ -510,13 +696,24 @@
       return '<label class="check-chip"><input type="checkbox" name="activities" value="' + a + '"' + (on ? ' checked' : '') + '><span>' + esc(act(a).name) + '</span></label>';
     }).join('');
     const playedGames = allGames().filter(function (g) { return (isJoined(g) || isMine(g)) && isOver(g); }).length;
-    return '<div class="page-head"><div><p class="eyebrow">Profile</p><h1 class="display">' + esc(u.username) + '</h1></div></div>' +
+    const ages = D.AGE_GROUPS.map(function (g) { return '<option' + (g === u.ageGroup ? ' selected' : '') + '>' + g + '</option>'; }).join('');
+    const levels = (u.activities || []).map(function (a) {
+      const opts = levelsFor(a).map(function (l) { return '<option value="' + l.id + '"' + ((u.levels || {})[a] === l.id ? ' selected' : '') + '>' + l.name + '</option>'; }).join('');
+      return '<div class="field"><label for="pr-lv-' + a + '">' + esc(act(a).name) + '</label><select id="pr-lv-' + a + '" name="level-' + a + '">' + opts + '</select></div>';
+    }).join('');
+    const acc = state.account;
+    return '<div class="page-head"><div><p class="eyebrow">Profile' + (u.showAge !== false && u.ageGroup ? ' · ' + esc(u.ageGroup) : '') + '</p><h1 class="display">' + esc(u.username) + '</h1></div></div>' +
       '<div class="profile-layout">' +
         '<form class="card form" data-form="profile" novalidate>' +
           (ui.error ? '<p class="error" role="alert">' + esc(ui.error) + '</p>' : '') +
           '<div class="field"><label for="pr-name">Username</label><input id="pr-name" name="username" maxlength="20" value="' + esc(u.username) + '"></div>' +
-          '<div class="field"><label for="pr-county">County</label><select id="pr-county" name="county">' + counties + '</select></div>' +
+          '<div class="grid-2">' +
+            '<div class="field"><label for="pr-county">County</label><select id="pr-county" name="county">' + counties + '</select></div>' +
+            '<div class="field"><label for="pr-age">Age group</label><select id="pr-age" name="ageGroup"><option value="">Rather not say</option>' + ages + '</select></div>' +
+          '</div>' +
+          '<label class="check-line"><input type="checkbox" name="showAge"' + (u.showAge !== false ? ' checked' : '') + '><span>Show my age group on my profile</span></label>' +
           '<fieldset class="field"><legend>Activities</legend><div class="chip-row">' + acts + '</div></fieldset>' +
+          (levels ? '<fieldset class="field"><legend>Your level</legend><div class="grid-2">' + levels + '</div></fieldset>' : '') +
           '<button class="btn btn-dark" type="submit">Save changes</button>' +
         '</form>' +
         '<div class="profile-side">' +
@@ -528,6 +725,9 @@
             '<li>Game chats delete at midnight the day after the game.</li>' +
             '<li>Reported messages are kept for review, then deleted.</li>' +
             '<li>18+ only.</li></ul></div>' +
+          '<div class="card"><h2 class="h-small">Account</h2><p class="muted small">' +
+            (acc ? (acc.provider === 'email' ? 'Signed in with ' + esc(acc.email) : 'Signed in with ' + esc(acc.provider)) : 'Demo account') + '</p>' +
+            '<button type="button" class="btn btn-sm btn-outline" data-action="signout">Sign out</button></div>' +
           '<div class="card"><h2 class="h-small">Demo</h2><p class="muted small">Everything here is saved in this browser only.</p>' +
             '<button type="button" class="btn btn-sm ' + (ui.resetArmed ? 'btn-danger' : 'btn-outline') + '" data-action="reset">' + (ui.resetArmed ? 'Tap again to wipe everything' : 'Reset the demo') + '</button></div>' +
         '</div>' +
@@ -593,6 +793,39 @@
       state = blank();
       save();
       go('#/');
+    },
+    signout: function () { state.signedOut = true; ui.signinMode = 'login'; save(); go('#/'); },
+    'signin-mode': function (el) { ui.signinMode = el.dataset.value; ui.error = null; render(); },
+    forgot: function () { ui.error = 'Demo: password reset emails come with real accounts.'; render(); },
+    social: function (el) {
+      const p = el.dataset.provider;
+      if (state.user && state.account && state.account.provider === p) {
+        state.signedOut = false; save(); go('#/'); return;
+      }
+      startDraft(p, null);
+    },
+    'j-age': function (el) { state.draft.ageGroup = el.dataset.value; save(); render(); },
+    'j-county': function (el) {
+      const fromMap = el.tagName.toLowerCase() === 'path';
+      state.draft.county = el.dataset.value; save(); render();
+      if (fromMap) { const p = document.querySelector('path.county.on'); if (p) p.focus(); }
+    },
+    'j-act': function (el) {
+      const d = state.draft, a = el.dataset.value, i = d.activities.indexOf(a);
+      if (i >= 0) d.activities.splice(i, 1); else d.activities.push(a);
+      save(); render();
+    },
+    'j-level': function (el) { state.draft.levels[el.dataset.act] = el.dataset.value; save(); render(); },
+    'j-next': function (el) {
+      const d = state.draft, step = el.dataset.step;
+      if (step === 'age' && d.ageGroup) go('#/join/county');
+      else if (step === 'county' && d.county) go('#/join/activities');
+      else if (step === 'activities' && d.activities.length) go('#/join/level/0');
+      else if (step === 'level') {
+        const i = parseInt(el.dataset.index, 10);
+        if (!d.levels[d.activities[i]]) return;
+        if (i + 1 < d.activities.length) go('#/join/level/' + (i + 1)); else finishJoin();
+      }
     }
   };
 
@@ -604,6 +837,7 @@
       if (page === 'game' || page === 'post') go('#/'); else render();
     },
     'filter-level': function (el) { state.filters.level = el.value; save(); render(); },
+    'j-showage': function (el) { state.draft.showAge = el.checked; save(); },
     'post-activity': function (el) {
       const form = el.closest('form');
       const a = el.value;
@@ -614,16 +848,31 @@
   };
 
   const USERNAME = /^[A-Za-z0-9_]{3,20}$/;
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const forms = {
-    signup: function (f) {
+    signin: function (f) {
+      const email = f.elements.email.value.trim().toLowerCase();
+      const pass = f.elements.password.value;
+      ui.lastEmail = email;
+      if (!EMAIL.test(email)) { ui.error = 'Enter a valid email address.'; return render(); }
+      const known = state.user && state.account && state.account.email === email;
+      if (ui.signinMode === 'login') {
+        if (!pass) { ui.error = 'Enter your password.'; return render(); }
+        if (!known) { ui.error = 'No account with that email in this browser. Create one instead.'; return render(); }
+        state.signedOut = false; save(); go('#/');
+      } else {
+        if (pass.length < 8) { ui.error = 'Use a password of at least 8 characters.'; return render(); }
+        if (known) { ui.error = 'There\'s already an account with that email. Log in instead.'; return render(); }
+        startDraft('email', email);
+      }
+    },
+    'j-username': function (f) {
       const name = f.elements.username.value.trim();
       if (!USERNAME.test(name)) { ui.error = 'Pick a username of 3 to 20 letters, numbers or underscores.'; return render(); }
-      if (!f.elements.adult.checked) { ui.error = 'Duine Eile is for adults only. Please confirm you\'re 18 or over.'; return render(); }
-      const acts = Array.from(f.querySelectorAll('input[name="activities"]:checked')).map(function (i) { return i.value; });
-      state.user = { username: name, county: f.elements.county.value, activities: acts };
-      state.filters = { activity: acts.length ? 'foryou' : 'all', level: 'all', day: 'any' };
+      if (D.HANDLES.indexOf(name.toLowerCase()) >= 0) { ui.error = 'That username is taken. Try another.'; return render(); }
+      state.draft.username = name;
       save();
-      go('#/');
+      go('#/join/age');
     },
     profile: function (f) {
       const name = f.elements.username.value.trim();
@@ -632,6 +881,14 @@
       state.user.username = name;
       state.user.county = f.elements.county.value;
       state.user.activities = Array.from(f.querySelectorAll('input[name="activities"]:checked')).map(function (i) { return i.value; });
+      state.user.ageGroup = f.elements.ageGroup.value || null;
+      state.user.showAge = f.elements.showAge.checked;
+      const levels = state.user.levels || (state.user.levels = {});
+      state.user.activities.forEach(function (a) {
+        const sel = f.elements['level-' + a];
+        if (sel) levels[a] = sel.value;
+        else if (!levels[a]) levels[a] = act(a).kind === 'player' ? 'casual' : 'moderate';
+      });
       state.posted.forEach(function (g) { if (g.organiser === old) g.organiser = name; });
       Object.keys(state.chats).forEach(function (k) { state.chats[k].forEach(function (m) { if (m.from === old) m.from = name; }); });
       save();
@@ -703,6 +960,23 @@
     e.preventDefault();
     forms[f.dataset.form](f);
   });
+  // Map: keyboard selection, hover and focus labels.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target.closest && e.target.closest('[role="button"][data-action]');
+    if (!el || el.tagName === 'BUTTON' || !actions[el.dataset.action]) return;
+    e.preventDefault();
+    actions[el.dataset.action](el);
+  });
+  document.addEventListener('mouseover', function (e) {
+    const p = e.target.closest && e.target.closest('path.county');
+    if (p) showTip(p); else hideTip();
+  });
+  document.addEventListener('focusin', function (e) {
+    const p = e.target.closest && e.target.closest('path.county');
+    if (p) showTip(p); else hideTip();
+  });
+
   window.addEventListener('hashchange', function () {
     ui.resetArmed = false;
     render();
